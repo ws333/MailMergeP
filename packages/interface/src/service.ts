@@ -3,13 +3,15 @@
  * the outside world (which has permission to send mail)
  */
 
+import { MessagePayload } from "../../iframe-service/src/iframe-service";
+
 let _messageId = 0;
 function getUniqueMessageId() {
     return _messageId++;
 }
 // We need to avoid sending messages until the parent has initialized,
 // so we set up a promise that gets triggered when the parent has sent its first signal.
-let resolveParentInitialized = () => {};
+let resolveParentInitialized: (value?: unknown) => void = () => {};
 let parentInitialized = new Promise((resolve) => {
     resolveParentInitialized = resolve;
 });
@@ -17,24 +19,24 @@ let parentInitialized = new Promise((resolve) => {
 // send a message to the parent window
 // including payload. Returns a promise that
 // is resolved by the parent's response.
-async function messageParent(payload) {
-    const { type, ...data } = payload;
+async function messageParent(payload: MessagePayload) {
+    const { type, data, ...rest } = payload;
     const message = {
         type: type,
         source: "CHILD",
         id: getUniqueMessageId(),
-        data: data,
+        data: { ...data, ...rest },
     };
 
     // We cannot send any messages until our parent has initialized, so we wait!
     await parentInitialized;
 
-    return new Promise((resolve, reject) => {
+    return new Promise<MessagePayload["data"]>((resolve) => {
         // construct a listener that resolves the promise when
         // getting back a reply, then removes itself from
         // listening.
-        let listener = (e) => {
-            let data = e.data;
+        let listener = (e: MessageEvent<MessagePayload>) => {
+            const { data } = e;
             // bail if this isn't a response for this message
             if (data.source !== "PARENT" || data.reply_id !== message.id) {
                 return;

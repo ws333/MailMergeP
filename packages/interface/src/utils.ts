@@ -1,8 +1,12 @@
+import jsCharDet from "jschardet";
 import nunjucks from "nunjucks";
 import * as XLSX from "xlsx";
-import jsCharDet from "jschardet";
+import { objectEntries } from "./helpers/objectHelpers";
+import { emptySpreadsheetData } from "./model";
+import { Email } from "./types/modelTypes";
+import { FileContent, NunjucksTemplate, SpreadsheetData } from "./types/types";
 
-function zip(a, b) {
+function zip<T, U>(a: Array<T | undefined>, b: Array<U>) {
     // If `a` has a blank slot (e.g. a == [1,,2]), then
     // `.map` will skip it over. We don't want that, so detect
     // a blank slot and create a dense array.
@@ -17,20 +21,25 @@ function zip(a, b) {
 
 // parse an array containing raw bytes from a spreadsheet of some
 // format. XLSX will auto-detect the format
-function parseSpreadsheet(data) {
+function parseSpreadsheet(data: FileContent): SpreadsheetData {
     if (data.length === 0) {
-        return [[]];
+        return emptySpreadsheetData;
     }
 
     try {
         // use xlsx.js to parse the spreadsheet data
         let parsed = XLSX.read(data.slice(), {
             type: "array",
-            dateNF: true,
+            // Todo: According to the docs dateNF should be a string, e.g. 'dd/mm/yyyy' See https://github.com/SheetJS/sheetjs/issues/718
+            //       But changing to date format string caused issues with non-english charaters. Keeping it as boolean for now.
+            // @ts-ignore
+            dateNF: true, 
             cellDates: true,
         });
         let sheet = parsed.Sheets[parsed.SheetNames[0]];
-        let sheetArray = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+        let sheetArray = XLSX.utils.sheet_to_json<string[]>(sheet, {
+            header: 1,
+        });
 
         return sheetArray;
     } catch (e) {
@@ -40,7 +49,10 @@ function parseSpreadsheet(data) {
     // Use jsCharDet to attempt to detect the encoding and try to parse the data again.
     try {
         const dataArray = new Uint8Array(data);
-        const rawString = String.fromCharCode.apply(null, dataArray);
+        const rawString = String.fromCharCode.apply(
+            null,
+            Array.from(dataArray)
+        );
         const detected = jsCharDet.detect(rawString);
         const targetEncoding =
             (detected.confidence > 0.9 && detected.encoding) || "utf-8";
@@ -54,7 +66,9 @@ function parseSpreadsheet(data) {
         let parsedStr = new TextDecoder(targetEncoding).decode(dataArray);
         let parsed = XLSX.read(parsedStr, { type: "string" });
         let sheet = parsed.Sheets[parsed.SheetNames[0]];
-        let sheetArray = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+        let sheetArray = XLSX.utils.sheet_to_json<string[]>(sheet, {
+            header: 1,
+        });
 
         return sheetArray;
     } catch (e) {
@@ -68,23 +82,48 @@ function parseSpreadsheet(data) {
             type: "array",
         });
         let sheet = parsed.Sheets[parsed.SheetNames[0]];
-        let sheetArray = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+        let sheetArray = XLSX.utils.sheet_to_json<string[]>(sheet, {
+            header: 1,
+        });
 
         return sheetArray;
     } catch (e) {
         console.warn("Error when parsing spreading; no fallback available", e);
     }
 
-    return [
-        ["!! Error parsing spreadsheet !!"],
-        [
-            "Try saving your spreadsheet in a different format (e.g. .xlsx or .ods)",
-        ],
-    ];
+    // Todo:
+    // Test how this error msg works by throwing and replace it with another solution that don't add an inconvenient return type.
+    // Does not seem to execute ever, I opened a png file renamed to xls and it was parsed and the HotTable filled with gibberish.
+    // But got the following in the console:
+    //
+    // Error when parsing spreading; using fallback Error: PNG Image File is not a spreadsheet
+    // at kf (xlsx.mjs:27263:72)
+    // at k8e (utils.ts:35:22)
+    // at Object.fn (model.ts:116:34)
+    // at Object.thunkHandler (index.js:771:16)
+    // at index.js:802:18
+    // at index.js:16:18
+    // at Object.dispatch (index.js:922:22)
+    // at Object.dispatch (page.bundle.js:6:7424)
+    // at r (index.js:801:21)
+    // at app.tsx:35:26
+
+    // return [
+    //     ["!! Error parsing spreadsheet !!"],
+    //     [
+    //         "Try saving your spreadsheet in a different format (e.g. .xlsx or .ods)",
+    //     ],
+    // ];
+    return emptySpreadsheetData;
 }
 
+type Subs = Record<string, string>;
 // Fill every item in template with data from spreadsheet
-function fillTemplate(template, spreadsheet, method = "nunjucks") {
+function fillTemplate(
+    template: Email,
+    spreadsheet: SpreadsheetData,
+    method = "nunjucks"
+) {
     // create an array of substitutions
     let [header, ...rows] = spreadsheet;
     let subsArray = rows
@@ -93,8 +132,8 @@ function fillTemplate(template, spreadsheet, method = "nunjucks") {
             return !row.every((x) => !x);
         })
         .map((row) => {
-            let subs = {};
-            for (let [key, val] of zip(header, row)) {
+            let subs: Subs = {};
+            for (let [key, val] of zip<string, any>(header, row)) {
                 // skip over non-string (likely null) headers
                 if (typeof key !== "string") {
                     continue;
@@ -103,6 +142,7 @@ function fillTemplate(template, spreadsheet, method = "nunjucks") {
                     val = String(val);
                 }
                 if (val instanceof Date) {
+                    // Todo: Will this ever be true? Row is defined as string now in TS, but not sure what happens during runtime.
                     val = val.toLocaleDateString();
                 }
                 // assume non-string values are just ""
@@ -129,25 +169,25 @@ function fillTemplate(template, spreadsheet, method = "nunjucks") {
     }
 }
 
-function fillTemplateNunjucks(template, subsArray) {
-    let ret = [];
-    let compiled = {};
+function fillTemplateNunjucks(template: Email, subsArray: Subs[]) {
+    let ret: Email[] = [];
+    let compiled: Partial<Record<keyof Email, NunjucksTemplate>> = {};
     // If auto-escaping is turned on, then emails with `<...>` will become `&lt;...&gt;`
     const env = nunjucks.configure({ autoescape: false });
 
     // pre-compile the template for efficiency
-    for (let [key, val] of Object.entries(template)) {
+    objectEntries(template).forEach(([key, val]) => {
         try {
             compiled[key] = nunjucks.compile(val, env);
         } catch (e) {
             console.warn("Failed to compile template", { [key]: val }, e);
         }
-    }
+    });
 
     // populate template for each row
     for (let subs of subsArray) {
-        let subbed = {};
-        for (let [key, val] of Object.entries(compiled)) {
+        let subbed: Email = {};
+        objectEntries(compiled).forEach(([key, val]) => {
             try {
                 subbed[key] = val.render(subs);
             } catch (e) {
@@ -157,20 +197,20 @@ function fillTemplateNunjucks(template, subsArray) {
                     "' with substitutions",
                     subs
                 );
-                subbed[key] = val.tmplStr;
+                subbed[key] = val.tmplStr || "";
             }
-        }
-        ret.push(subbed);
+        }),
+            ret.push(subbed);
     }
 
     return ret;
 }
 
-function fillTemplateLegacy(template, subsArray) {
+function fillTemplateLegacy(template: Email, subsArray: Subs[]) {
     let ret = [];
 
     // recursively apply substitutions
-    function substitute(string, object) {
+    function substitute(string: string, object: Record<string, string>) {
         //var objPattern = new RegExp("(?:[{][{]([^|{}]*)[}][}])", "g");
         //var objPattern = new RegExp("(?:[{][{]([^|{}]*)[}][}]|[{][{]([^|{}]*)[|]([^|{}]*)[|]([^|{}]*)[}][}])", "g");
         //var objPattern = new RegExp("(?:[{][{]([^|{}]*)[}][}]|[{][{]([^|{}]*)[|]([^|{}]*)[|]([^|{}]*)[}][}]|[{][{]([^|{}]*)[|]([^|{}]*)[|]([^|{}]*)[|]([^|{}]*)[}][}])", "g");
@@ -319,8 +359,8 @@ function fillTemplateLegacy(template, subsArray) {
 
     // populate template for each row
     for (let subs of subsArray) {
-        let subbed = {};
-        for (let [key, val] of Object.entries(template)) {
+        let subbed: Email = {};
+        objectEntries(template).forEach(([key, val]) => {
             try {
                 subbed[key] = substitute(val, subs);
             } catch (e) {
@@ -332,7 +372,8 @@ function fillTemplateLegacy(template, subsArray) {
                 );
                 subbed[key] = val;
             }
-        }
+        });
+
         ret.push(subbed);
     }
 
@@ -348,23 +389,23 @@ function fillTemplateLegacy(template, subsArray) {
  *
  * Based off of https://github.com/euank/node-parse-numeric-range
  */
-function parseRange(str, minVal = 0, maxVal = 100) {
-    function parsePart(str) {
+function parseRange(range: string, minVal = 0, maxVal = 100) {
+    function parsePart(part: string) {
         // just a number
-        if (/^-?\d+$/.test(str)) {
-            return parseInt(str, 10);
+        if (/^-?\d+$/.test(part)) {
+            return parseInt(part, 10);
         }
         var m;
         // 1-5 or 1..5 (equivilant) or 1...5 (doesn't include 5)
         if (
-            (m = str.match(/^(-?\d*)(-|\.\.\.?|\u2025|\u2026|\u22EF)(-?\d*)$/))
+            (m = part.match(/^(-?\d*)(-|\.\.\.?|\u2025|\u2026|\u22EF)(-?\d*)$/))
         ) {
             var lhs = m[1] || minVal;
             var sep = m[2];
             var rhs = m[3] || maxVal;
             if (lhs && rhs) {
-                lhs = parseInt(lhs);
-                rhs = parseInt(rhs);
+                lhs = parseInt(lhs.toString());
+                rhs = parseInt(rhs.toString());
                 var res = [];
                 var incr = lhs < rhs ? 1 : -1;
 
@@ -381,7 +422,7 @@ function parseRange(str, minVal = 0, maxVal = 100) {
         }
         return [];
     }
-    var parts = str.split(",");
+    var parts = range.split(",");
 
     var toFlatten = parts.map(function (el) {
         return parsePart(el.trim());
@@ -394,11 +435,21 @@ function parseRange(str, minVal = 0, maxVal = 100) {
         return toFlatten;
     }
 
-    return toFlatten.reduce(function (lhs, rhs) {
+    const flattened = toFlatten.reduce(function (lhs, rhs) {
         if (!Array.isArray(lhs)) lhs = [lhs];
         if (!Array.isArray(rhs)) rhs = [rhs];
         return lhs.concat(rhs);
     });
+
+    // Added to avoid returning just a number since using array functions on the return value.
+    // Todo:
+    // A better solution would be to modify the logic to fix the original return type which was number | (number | number[])[]
+    // It seems like the return type can be narrowed down to number[] based on the outputs when testing dfferent ranges.
+    if (Array.isArray(flattened)) {
+        return flattened;
+    } else {
+        return [flattened];
+    }
 }
 
 /**
@@ -408,14 +459,14 @@ function parseRange(str, minVal = 0, maxVal = 100) {
  * @param {function} abortFunction - called repeatedly to test if the promise should be aborted
  * @returns {Promise}
  */
-function delay(duration, abortFunction = () => false) {
+function delay(duration: number, abortFunction = () => false) {
     // ms to poll before testing if we should abort
     const POLLING_DURATION = 100;
 
-    return new Promise((resolve, reject) => {
-        const startTime = new Date();
+    return new Promise<void>((resolve) => {
+        const startTime = Date.now();
         const intervalHandle = window.setInterval(function () {
-            if (new Date() - startTime >= duration || abortFunction()) {
+            if (Date.now() - startTime >= duration || abortFunction()) {
                 resolve();
                 window.clearTimeout(intervalHandle);
             }
@@ -429,8 +480,8 @@ function delay(duration, abortFunction = () => false) {
  * @param {number} time
  * @returns {string} - formatted as "HH:mm:ss"
  */
-function formatTime(time) {
-    function pad(x) {
+function formatTime(time: number) {
+    function pad(x: number) {
         return ("" + x).padStart(2, "0");
     }
 
@@ -441,4 +492,4 @@ function formatTime(time) {
     return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
 }
 
-export { fillTemplate, parseSpreadsheet, parseRange, delay, formatTime };
+export { delay, fillTemplate, formatTime, parseRange, parseSpreadsheet };

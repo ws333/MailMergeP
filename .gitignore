@@ -7,3 +7,5 @@ launch.json
 
 *.xpi
 MailMerge*.zip
+
+backup

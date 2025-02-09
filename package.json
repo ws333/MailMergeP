@@ -26,7 +26,9 @@
     },
     "devDependencies": {
         "@eslint/js": "^9.19.0",
+        "@types/handsontable": "^0.31.2",
         "@types/node": "^22.13.1",
+        "@types/nunjucks": "^3.2.6",
         "@types/react": "^18.3.1",
         "@types/react-dom": "^18.3.1",
         "@vitejs/plugin-react": "^4.3.4",

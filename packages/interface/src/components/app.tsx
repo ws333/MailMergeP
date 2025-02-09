@@ -1,5 +1,5 @@
-import React, { useEffect } from "react";
-import { useStoreActions, useStoreState } from "easy-peasy";
+import { useEffect } from "react";
+import { useStoreActions, useStoreState } from "../hooks/storeHooks";
 import { TabStrip, Tab } from "./common";
 import { DataTab } from "./data-tab";
 import { SettingsTab } from "./settings-tab";
@@ -9,6 +9,10 @@ import { SendDialog } from "./send-dialog";
 import icon from "../../../thunderbird-extension/public/skin/icon64.png";
 
 export default function App() {
+    // Redux DevTools only enabled in dev mode by default
+    if (process.env.NODE_ENV !== "development")
+        console.warn("process.env.NODE_ENV", process.env.NODE_ENV);
+
     const strings = useStoreState((state) => state.locale.strings);
 
     const initialise = useStoreActions((actions) => actions.initialise);
@@ -35,7 +39,11 @@ export default function App() {
         <>
             <header className="panel-section panel-section-header">
                 <div className="icon-section-header">
-                    <img className="mailmergep-icon" src={icon} alt="Mail Merge P Icon" />
+                    <img
+                        className="mailmergep-icon"
+                        src={icon}
+                        alt="Mail Merge P Icon"
+                    />
                 </div>
                 <div className="text-section-header">Mail Merge</div>
             </header>

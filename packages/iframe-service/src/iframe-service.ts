@@ -3,6 +3,9 @@
  * running as an extension
  */
 
+import { Email, Prefs } from "../../interface/src/types/modelTypes";
+import { Strings } from "../../interface/src/types/types";
+
 export type MessagePayload = {
     type:
         | "ECHO"
@@ -16,22 +19,23 @@ export type MessagePayload = {
         | "OPEN_URL"
         | "CANCEL"
         | "INITIALIZE_PARENT";
-    id: string | number;
-    source: "CHILD" | "PARENT";
+    id?: string | number;
+    source?: "CHILD" | "PARENT";
+    reply_id?: string | number;
     data?: {
-        prefs: unknown;
-        template: string;
-        strings: any;
-        emails: any;
-        email: any;
-        sendmode: any;
-        url: any;
+        prefs?: Partial<Prefs>;
+        template?: Email;
+        strings?: Strings;
+        emails?: Array<Email>;
+        email?: Email;
+        sendmode?: Prefs["sendmode"];
+        url?: string;
     };
 };
 
 export const iframeService = {
     iframe: null as HTMLIFrameElement | null,
-    log: function log(message) {
+    log: function log(message: unknown) {
         console.log(message);
     },
     init: function init(iframe: HTMLIFrameElement) {
@@ -39,22 +43,22 @@ export const iframeService = {
         // so it is capable of sending messages back.
         iframeService.iframe =
             iframe ||
-            (window.document.getElementById(
-                "content-frame"
-            ) as HTMLIFrameElement);
-        (window as any).childFrame = iframe;
+            window.document.querySelector<HTMLIFrameElement>("#content-frame");
+        window.childFrame = iframe;
 
         if (iframe.contentDocument?.readyState === "complete") {
             iframeService.initChild();
         } else {
-            iframeService.iframe.onload = (e) => {
+            iframeService.iframe.onload = () => {
                 iframeService.initChild();
             };
         }
     },
-    onmessage: async function (e) {
-        const payload = (e.data || {}) as MessagePayload;
+    onmessage: async function (e: MessageEvent<MessagePayload>) {
+        const payload = e.data || {};
         const { type, id, source, data } = payload;
+
+        if (!data) return;
 
         if (source !== "CHILD") {
             // We got a message that wasn't from our child iframe.
@@ -72,51 +76,64 @@ export const iframeService = {
                 iframeService.messageChild({
                     type,
                     id,
-                    prefs: await iframeService.commands.getDefaultPreferences(),
+                    data: {
+                        prefs: await iframeService.commands.getDefaultPreferences(),
+                    },
                 });
                 break;
             case "GET_PREFERENCES":
                 iframeService.messageChild({
                     type,
                     id,
-                    prefs: await iframeService.commands.getPreferences(),
+                    data: {
+                        prefs: await iframeService.commands.getPreferences(),
+                    },
                 });
                 break;
             case "SET_PREFERENCES":
-                await iframeService.commands.setPreferences(data!.prefs);
+                await iframeService.commands.setPreferences(data.prefs);
                 iframeService.messageChild({
                     type,
                     id,
-                    prefs: await iframeService.commands.getPreferences(),
+                    data: {
+                        prefs: await iframeService.commands.getPreferences(),
+                    },
                 });
                 break;
             case "GET_TEMPLATE":
                 iframeService.messageChild({
                     type,
                     id,
-                    template: await iframeService.commands.getTemplate(),
+                    data: {
+                        template: await iframeService.commands.getTemplate(),
+                    },
                 });
                 break;
             case "GET_LOCALIZED_STRINGS":
                 iframeService.messageChild({
                     type,
                     id,
-                    strings: await iframeService.commands.getLocalizedStrings(),
+                    data: {
+                        strings:
+                            await iframeService.commands.getLocalizedStrings(),
+                    },
                 });
                 break;
             case "SEND_EMAILS":
-                await iframeService.commands.sendEmails(data!.emails);
+                if (data.emails)
+                    await iframeService.commands.sendEmails(data.emails);
                 iframeService.messageChild({ type, id });
                 break;
             case "SEND_EMAIL":
-                await iframeService.commands.sendEmail(
-                    data!.email,
-                    data!.sendmode
-                );
+                if (data.email)
+                    await iframeService.commands.sendEmail(
+                        data.email,
+                        data.sendmode
+                    );
                 iframeService.messageChild({ type, id });
                 break;
             case "OPEN_URL":
-                iframeService.commands.openUrl(data!.url);
+                if (data.url) iframeService.commands.openUrl(data.url);
                 break;
             case "CANCEL":
                 iframeService.commands.cancel();
@@ -138,46 +155,50 @@ export const iframeService = {
         iframeService.log({ ...payload, direction: "tochild" });
     },
     // send a message to the child iframe
-    messageChild: function messageChild(payload) {
-        const { type, id, ...data } = payload;
+    messageChild: function messageChild(payload: MessagePayload) {
+        const { type, id, data } = payload;
         let message = {
             type: type,
             source: "PARENT",
             reply_id: id,
-            data: data,
+            data: { ...data },
         };
         iframeService.iframe?.contentWindow?.postMessage(message, "*");
         iframeService.log({ ...message, direction: "tochild" });
     },
     commands: {
-        getDefaultPreferences: () => {
+        getDefaultPreferences: async () => {
+            console.warn("Function not implemented");
+            return {} as Prefs;
+        },
+        getPreferences: async () => {
+            console.warn("Function not implemented");
+            return {} as Prefs;
+        },
+        getLocalizedStrings: async () => {
+            console.warn("Function not implemented");
+            return {} as Strings;
+        },
+        getTemplate: async () => {
+            console.warn("Function not implemented");
+            return {} as Email;
+        },
+        setPreferences: async (_prefs?: Partial<Prefs>) => {
             console.warn("Function not implemented");
         },
-        getPreferences: () => {
+        sendEmails: async (_emails: Email[]) => {
             console.warn("Function not implemented");
         },
-        getLocalizedStrings: () => {
-            console.warn("Function not implemented");
-        },
-        getTemplate: () => {
-            console.warn("Function not implemented");
-        },
-        setPreferences: (prefs: unknown) => {
-            console.warn("Function not implemented");
-        },
-        sendEmails: (emails: string[]) => {
-            console.warn("Function not implemented");
-        },
-        sendEmail: (email: string, mode?: string) => {
+        sendEmail: async (_email: Email, _sendmode?: Prefs["sendmode"]) => {
             console.warn("Function not implemented");
         },
         cancel: () => {
             console.warn("Function not implemented");
         },
-        openUrl: (url: string) => {
+        openUrl: (_url: string) => {
             console.warn("Function not implemented");
         },
     },
 };
 
-(window as any).iframeService = iframeService;
+window.iframeService = iframeService;

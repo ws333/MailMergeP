@@ -1,7 +1,7 @@
 import ReactDOM from "react-dom/client";
 import { StoreProvider, createStore } from "easy-peasy";
 
-import model from "./model.ts";
+import model from "./model";
 import App from "./components/app";
 
 import "./css/browser-style.css";

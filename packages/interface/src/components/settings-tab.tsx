@@ -1,34 +1,38 @@
-import React, { useState } from "react";
-import { useStoreState, useStoreActions } from "easy-peasy";
 import classNames from "classnames";
-import { ClearableInput } from "./common";
+import { ChangeEvent, useState } from "react";
+import { useStoreActions, useStoreState } from "../hooks/storeHooks.ts";
+import { Prefs } from "../types/modelTypes.ts";
+import { PrefsOrEvent } from "../types/types.ts";
 import { parseRange } from "../utils";
+import { ClearableInput } from "./common";
 
 function SettingsTab() {
     const prefs = useStoreState((state) => state.prefs);
     const strings = useStoreState((state) => state.locale.strings);
     const updatePref = useStoreActions((actions) => actions.prefs.updatePref);
-    function generatePrefUpdate(pref) {
-        return (e) => {
-            if (e.target) {
-                updatePref({ [pref]: e.target.value });
+    const generatePrefUpdate = (pref: keyof Prefs) => {
+        return (prefsOrEvent: PrefsOrEvent) => {
+            if (typeof prefsOrEvent !== "string" && prefsOrEvent.target) {
+                updatePref({ [pref]: prefsOrEvent.target.value });
             } else {
-                updatePref({ [pref]: e });
+                updatePref({ [pref]: prefsOrEvent });
             }
         };
-    }
+    };
 
     // Use local state for delay value to avoid cursor jumping to end of input on changes
     const [delayValue, setDelayValue] = useState(prefs.delay);
-    function onChangeDelayInput(e) {
+    function onChangeDelayInput(e: ChangeEvent<HTMLInputElement>) {
         const value = e.target ? e.target.value : e;
-        setDelayValue(value);
+        const numberValue = Number(value);
+        setDelayValue(numberValue);
     }
 
     // a range is invalid if it is non-empty and parseRange parses it
     // to an empty array
     const rangeValid =
-        prefs.range.trim().length === 0 || parseRange(prefs.range).length > 0;
+        prefs.range?.trim().length === 0 ||
+        parseRange(prefs.range || "").length > 0;
 
     return (
         <div className="browser-style settings-panel">
@@ -68,7 +72,7 @@ function SettingsTab() {
                 {strings.sendMessageRange}
             </label>
             <ClearableInput
-                value={prefs.range}
+                value={prefs.range || ""}
                 id="pref-range"
                 className={classNames({
                     invalid: !rangeValid,
