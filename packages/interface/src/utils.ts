@@ -7,7 +7,7 @@ import type {
     FileContent,
     NunjucksTemplate,
     SpreadsheetData,
-} from "./types/types";
+} from "./types/types.ts";
 
 function zip<T, U>(a: Array<T | undefined>, b: Array<U>) {
     // If `a` has a blank slot (e.g. a == [1,,2]), then

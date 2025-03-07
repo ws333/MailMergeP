@@ -13,12 +13,13 @@ export default defineConfig({
         svgrPlugin(),
         // Bundle everything into a single file
         // This will make it easier to load files in the extension
-       // viteSingleFile(),
+        // viteSingleFile(),
     ],
     build: {
         sourcemap: true,
         minify: true,
         rollupOptions: {
+            maxParallelFileOps: 100,
             output: {
                 entryFileNames: `assets/[name].js`,
                 chunkFileNames: `assets/[name].js`,

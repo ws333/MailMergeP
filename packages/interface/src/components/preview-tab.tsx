@@ -15,8 +15,10 @@ function PreviewTab() {
 
     // The email.body contains full HTML, including the <html> and <body> tags.
     // Parse it so we can grab just the body.
-    const emailBody = new DOMParser().parseFromString(email.body || "", "text/html")
-        .body.innerHTML;
+    const emailBody = new DOMParser().parseFromString(
+        email.body || "",
+        "text/html"
+    ).body.innerHTML;
 
     const renderEmails = useStoreActions((actions) => actions.renderEmails);
     useEffect(() => {

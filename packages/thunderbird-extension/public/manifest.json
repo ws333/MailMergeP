@@ -24,7 +24,8 @@
         "compose",
         "compose.send",
         "tabs",
-        "accountsRead"
+        "accountsRead",
+        "https://iase.one/"
     ],
     "compose_action": {
         "default_title": "__MSG_extensionName__",

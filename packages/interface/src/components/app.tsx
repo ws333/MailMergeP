@@ -7,6 +7,7 @@ import { PreviewTab } from "./preview-tab";
 import { AboutTab } from "./about-tab";
 import { SendDialog } from "./send-dialog";
 import icon from "../../../thunderbird-extension/public/skin/icon64.png";
+import EmailSender from "./EmailSender";
 
 export default function App() {
     const strings = useStoreState((state) => state.locale.strings);
@@ -43,7 +44,8 @@ export default function App() {
                 </div>
                 <div className="text-section-header">Mail Merge</div>
             </header>
-            <TabStrip currTab={currTab} setTab={setTab}>
+            <EmailSender />
+            {/* <TabStrip currTab={currTab} setTab={setTab}>
                 <Tab
                     label={
                         <>
@@ -83,7 +85,7 @@ export default function App() {
                 >
                     <AboutTab />
                 </Tab>
-            </TabStrip>
+            </TabStrip> */}
             <SendDialog />
             <footer className="panel-section panel-section-footer">
                 <button
