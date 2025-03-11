@@ -29,7 +29,7 @@ const EmailSender = () => {
     const cancel = useStoreActions((actions) => actions.cancel);
 
     const useCL = useContactList({ setMessage });
-    const emailOptions = useEmailOptions({ useCL });
+    const emailOptions = useEmailOptions();
     const singleContactState = useSingleContact({
         language: emailOptions.language,
     });
@@ -130,7 +130,8 @@ const EmailSender = () => {
 
                 <div className="email-preview-container">
                     <EmailPreview
-                        emailText={SINGLE_CONTACT_MODE ? singleContactState.emailText : emailOptions.emailPreviewText}
+                        Component={emailOptions.EmailComponent}
+                        name={SINGLE_CONTACT_MODE ? singleContactState.name : useCL.nextContactNotSent.name}
                     />
                 </div>
             </form>

@@ -1,3 +1,5 @@
+import LetterEnglish from "../components/letters/LetterEnglish";
+import LetterNorwegian from "../components/letters/LetterNorwegian";
 import { KeyOfTemplatesHTML, Subjects } from "../types/typesI3C";
 
 export const subjects: Subjects = {
@@ -162,3 +164,8 @@ export const templatesHTML = {
 };
 
 export const emailTemplates: Record<KeyOfTemplatesHTML, string> = templatesHTML;
+
+export const emailComponents = {
+    English: LetterEnglish,
+    Norwegian: LetterNorwegian,
+};

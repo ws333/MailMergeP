@@ -1,34 +1,23 @@
-import { useState } from "react";
-import { emailTemplates, subjects } from "../constants/emailTemplates";
-import { mergeTemplate } from "../helpers/mergeTemplate";
+import { useRef, useState } from "react";
+import LetterEnglish from "../components/letters/LetterEnglish";
+import { emailComponents, subjects } from "../constants/emailTemplates";
 import { KeyOfTemplatesHTML } from "../types/typesI3C";
-import { UseContactListReturnType } from "./useContactList";
 
-type UseEmailOptionsArgs = {
-    useCL: UseContactListReturnType;
-};
-
-function useEmailOptions({ useCL }: UseEmailOptionsArgs) {
+function useEmailOptions() {
     const [delay, setDelay] = useState<number>(1);
     const [language, _setLanguage] = useState<KeyOfTemplatesHTML>("English");
-    const [subjectOption, setSubjectOption] = useState<string>(
-        subjects[language][0]
-    );
+    const [subjectOption, setSubjectOption] = useState<string>(subjects[language][0]);
     const [customSubject, setCustomSubject] = useState<string>("");
     const selectedSubject =
-        subjectOption === "Custom Subject" || subjectOption === "Tilpasset Emne"
-            ? customSubject
-            : subjectOption;
+        subjectOption === "Custom Subject" || subjectOption === "Tilpasset Emne" ? customSubject : subjectOption;
+
+    const EmailComponentRef = useRef<typeof LetterEnglish>(LetterEnglish);
 
     const setLanguage = (value: KeyOfTemplatesHTML) => {
         _setLanguage(value);
-        setSubjectOption(subjects[language][0]);
+        setSubjectOption(subjects[value][0]);
+        EmailComponentRef.current = emailComponents[value];
     };
-
-    const emailPreviewText = mergeTemplate(
-        emailTemplates[language],
-        useCL.nextContactNotSent
-    );
 
     return {
         delay,
@@ -40,7 +29,7 @@ function useEmailOptions({ useCL }: UseEmailOptionsArgs) {
         customSubject,
         setCustomSubject,
         selectedSubject,
-        emailPreviewText,
+        EmailComponent: EmailComponentRef.current,
     };
 }
 export { useEmailOptions };

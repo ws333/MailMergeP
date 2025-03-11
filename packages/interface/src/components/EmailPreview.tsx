@@ -1,16 +1,16 @@
-type EmailOptionsProps = {
-    emailText: string;
+import { LetterProps } from "../types/types";
+
+type EmailPreviewProps = {
+    Component: ({ name }: LetterProps) => JSX.Element;
+    name: string;
 };
 
-function EmailPreview({ emailText }: EmailOptionsProps) {
+function EmailPreview({ name, Component }: EmailPreviewProps) {
     return (
         <div>
-            <div
-                className="email-preview-content"
-                dangerouslySetInnerHTML={{
-                    __html: emailText,
-                }}
-            />
+            <div className="email-preview-content">
+                <Component name={name} />
+            </div>
         </div>
     );
 }
