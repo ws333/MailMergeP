@@ -4,7 +4,7 @@
     "version": "0.1.0",
     "applications": {
         "gecko": {
-            "id": "mailmergeiase@iase.one",
+            "id": "iases3@iase.one",
             "strict_min_version": "115.0"
         }
     },

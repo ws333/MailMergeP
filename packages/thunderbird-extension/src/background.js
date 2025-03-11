@@ -72,13 +72,13 @@ class MailmergeWindow {
 }
 const mailmergeWindow = new MailmergeWindow();
 
-// Listen for when the "Mail Merge IASE" button is clicked
+// Listen for when the "Step 3" button is clicked
 browser.browserAction.onClicked.addListener(async (tabInfo) => {
     await mailmergeWindow.sendMessage({ activeTabId: tabInfo.id });
     await mailmergeWindow.ensureWindowOpened();
 });
 
-// We are responsible for closing the MailMerge IASE window if asked.
+// We are responsible for closing the "Step 3" window if asked.
 browser.runtime.onMessage.addListener(async (message) => {
     if ((message || {}).action === "close") {
         await mailmergeWindow.close();

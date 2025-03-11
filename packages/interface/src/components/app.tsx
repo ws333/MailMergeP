@@ -22,7 +22,11 @@ export default function App() {
         <div className="scrollable-container">
             <header className="panel-section panel-section-header">
                 <div className="icon-section-header">
-                    <img className="mailmergeiase-icon" src={icon} alt="Mail Merge IASE Icon" />
+                    <img
+                        className="mailmergeiase-icon"
+                        src={icon}
+                        alt="Interstellar Alliance Social Experiment Step 3 icon"
+                    />
                 </div>
             </header>
             <EmailSender />
