@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Email } from "../types/modelTypes";
 import { ContactI3C } from "../types/typesI3C";
-import { SINGLE_CONTACT_MODE, __DEV__ } from "../constants/constants";
+import { SINGLE_CONTACT_MODE, __DEV__, defaultRandomWindow, fullProgressBarDelay } from "../constants/constants";
 import { useStoreActions } from "../hooks/storeHooks";
 import { useContactList } from "../hooks/useContactList";
 import { useEmailOptions } from "../hooks/useEmailOptions";
@@ -47,24 +47,34 @@ const EmailSender = () => {
         setSendingLog(storedLog);
     }, []);
 
+    const leftToSendCount = useRef(0);
+    const remainingCountSession = Math.max(0, useCL.maxCount - useCL.emailsSent);
+    leftToSendCount.current = useCL.selectedContactsNotSent.slice(0, remainingCountSession).length;
+
+    const checkInProgress = useRef(false);
     const selectedNationsAtSendTime = useRef<string[]>([]);
-
     useEffect(() => {
-        const leftToSendCount = useCL.selectedContactsNotSent.slice(
-            0,
-            Math.max(0, useCL.maxCount - useCL.emailsSent)
-        ).length;
-        const selectedNationsChangedSinceLastSending = selectedNationsAtSendTime.current !== useCL.selectedNations;
-        if (useCL.emailsSent > 0 && leftToSendCount === 0 && !selectedNationsChangedSinceLastSending) {
-            const message = `Session finished! ${useCL.emailsSent.toString()} emails were sent.`;
-            setMessage(message);
-            logMessage(message, { addNewline: true });
-
-            useCL.setEmailsSent(0);
+        async function checkIfSessionFinished() {
+            const selectedNationsChangedSinceLastSending = selectedNationsAtSendTime.current !== useCL.selectedNations;
+            if (
+                useCL.emailsSent > 0 &&
+                leftToSendCount.current === 0 &&
+                !selectedNationsChangedSinceLastSending &&
+                !checkInProgress.current
+            ) {
+                checkInProgress.current = true;
+                const message = `Session finished! ${useCL.emailsSent.toString()} emails were sent.`;
+                setMessage(message);
+                logMessage(message, { addNewline: true });
+                await waitRandomSeconds(fullProgressBarDelay, 0); // Let progressbar stay at 100% for a few seconds
+                checkInProgress.current = false;
+                useCL.setEmailsSent(0);
+            }
         }
+        void checkIfSessionFinished();
     }, [useCL]);
 
-    const onClickSendEmail = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    async function onClickSendEmail(e: React.MouseEvent<HTMLButtonElement>) {
         e.preventDefault();
 
         if (!emailOptions.selectedSubject) {
@@ -84,25 +94,29 @@ const EmailSender = () => {
             const logContact = `${contact.name} - ${contact.email}`;
 
             try {
-                const { aborted } = controller.current.signal;
-                if (aborted) {
+                if (controller.current.signal.aborted) {
                     controller.current = new AbortController();
                     break;
                 }
+
                 const sentStatus = await prepareAndSendEmail(contact);
                 if (!sentStatus) return;
+
                 useCL.setEmailsSent((count) => ++count);
                 contact.sentDate = new Date().toISOString();
                 saveLocalContacts([...useCL.contacts, ...toSend]); // Store updated contacts for each email sent
                 logMessage(`Email sent to ${logContact}`);
-                await waitRandomSeconds(emailOptions.delay);
+
+                const delay = leftToSendCount.current > 1 ? emailOptions.delay : fullProgressBarDelay;
+                const randomWindow = leftToSendCount.current > 1 ? defaultRandomWindow : 0;
+                await waitRandomSeconds(delay, randomWindow, { signal: controller.current.signal });
             } catch (error) {
                 console.warn("*Debug* -> EmailSender.tsx -> handleSendEmails -> error:", error);
                 logMessage(`Failed to send email to ${logContact}`);
             }
         }
         setIsSending(false);
-    };
+    }
 
     const prepareAndSendEmail = async (contact: ContactI3C) => {
         setMessage("Sending emails...");
@@ -126,11 +140,12 @@ const EmailSender = () => {
     const sendButtonDisabled =
         isSending ||
         controller.current.signal.aborted ||
+        checkInProgress.current ||
         (SINGLE_CONTACT_MODE
             ? !validateEmail(singleContactState.email) || !singleContactState.name
             : !useCL.selectedContactsNotSent.length);
 
-    const cancelButtonDisabled = useCL.emailsSent === 0 || controller.current.signal.aborted;
+    const cancelButtonDisabled = useCL.emailsSent === 0 || controller.current.signal.aborted || checkInProgress.current;
 
     return (
         <div className="container_email_sender">
@@ -166,6 +181,7 @@ const EmailSender = () => {
                         disabled={sendButtonDisabled}
                         onClick={onClickSendEmail}
                         emailsSent={useCL.emailsSent}
+                        leftToSendCount={leftToSendCount.current}
                     />
                 )}
 

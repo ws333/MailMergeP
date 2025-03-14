@@ -5,7 +5,8 @@ export const CONTACTS_CSV_URL = "https://iase.one/contact_lists/contactsI3C_test
 export const LOCAL_STORAGE_CONTACTS_KEY = "contactsI3C";
 export const LOCAL_STORAGE_SENDING_LOG_KEY = "sendingLog";
 
-export const minDelay = 3; // Minimum delay between emails being sent in seconds
+export const defaultRandomWindow = 1;
+export const fullProgressBarDelay = 3;
 
 export const NATIONS_CSV_URL = "https://iase.one/contact_lists/nations.csv";
 export const NATIONS_FALLBACK = ["EU", "FR", "GB", "NO"];
