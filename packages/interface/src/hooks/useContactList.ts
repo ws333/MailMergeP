@@ -14,9 +14,9 @@ function useContactList() {
     const [selectAll, setSelectAll] = useState(false);
 
     function setMaxCount(value: number) {
-        if (value < emailsSent) {
+        if (value <= emailsSent) {
             const userConfirm = confirm(
-                "You are about to set 'Number of emails' to a lower value than the number of emails already sent, this will end the current session.\n\nAre you sure you want to continue?"
+                "You are about to set 'Number of emails' to the same or a lower value than the number of emails already sent, this will end the current session.\n\nAre you sure you want to continue?"
             );
             if (!userConfirm) return;
         }
