@@ -1,4 +1,4 @@
-import type { ChangeEvent, FocusEvent } from "react";
+import type { ChangeEvent, FocusEvent, JSX } from "react";
 
 export type EmailComponentProps = {
     name: string;
