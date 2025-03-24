@@ -10,8 +10,6 @@ export type FileContent = number[];
 
 export type ParseRangeReturnType = number[];
 
-export type ImportStats = { contactsDeleted: number; contactsProcessed: number; logsProcessed: number };
-
 // An array of arrays of cell values, which can be anything to support custom cell data types, but by default is `string | number | boolean | undefined`.
 // See /node_modules/handsontable/common.d.ts // Todo - Package handsontable is removed so related code can also be removed
 export type SpreadsheetData = string[][];

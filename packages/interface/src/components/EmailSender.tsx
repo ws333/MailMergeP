@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Email } from "../types/modelTypes";
-import { ContactI3C } from "../types/typesI3C";
+import { ContactI3C, LogMessageOptions } from "../types/typesI3C";
 import {
     SINGLE_CONTACT_MODE,
     defaultRandomWindow,
@@ -11,10 +11,9 @@ import { useStoreActions, useStoreState } from "../hooks/storeHooks";
 import { useContactList } from "../hooks/useContactList";
 import { useEmailOptions } from "../hooks/useEmailOptions";
 import { useSingleContact } from "../hooks/useSingleContact";
-import { saveLocalStorageActiveContacts } from "../helpers/localStorage";
-import { LogMessageOptions, logSendingMessage } from "../helpers/logSendingMessage";
+import { storeActiveContacts } from "../helpers/indexedDB";
 import { renderEmail } from "../helpers/renderEmail";
-import { readSendingLog } from "../helpers/sendingLog";
+import { logSendingMessage, readSendingLog } from "../helpers/sendingLog";
 import { validateEmail } from "../helpers/validateEmail";
 import { waitRandomSeconds } from "../helpers/waitRandomSeconds";
 import ButtonCancel from "./ButtonCancel";
@@ -54,8 +53,11 @@ const EmailSender = () => {
 
     useEffect(() => {
         console.log(`Updating sendingLog after reset on render #${forcedRender}`);
-        const storedLog = readSendingLog();
-        setSendingLog(storedLog);
+        async function readLog() {
+            const storedLog = await readSendingLog();
+            setSendingLog(storedLog);
+        }
+        void readLog();
     }, [forcedRender]);
 
     const leftToSendCount = useRef(0);
@@ -73,10 +75,10 @@ const EmailSender = () => {
                 (endSession || (leftToSendCount.current === 0 && !selectedNationsChangedSinceLastSending))
             ) {
                 checkInProgress.current = true;
+                await waitRandomSeconds(fullProgressBarDelay, 0); // Let progressbar stay at 100% for a few seconds
                 const message = `${sessionFinishedText} ${useCL.emailsSent.toString()} emails were sent.`;
                 setMessage(message);
                 logMessage(message, { addNewline: true });
-                await waitRandomSeconds(fullProgressBarDelay, 0); // Let progressbar stay at 100% for a few seconds
                 checkInProgress.current = false;
                 useCL.setEmailsSent(0);
                 setEndSession(false);
@@ -118,7 +120,7 @@ const EmailSender = () => {
                 useCL.setEmailsSent((count) => ++count);
                 contact.sentDate = Date.now();
                 contact.sentCount++;
-                saveLocalStorageActiveContacts([...useCL.contacts, ...toSend]); // Store updated contacts for each email sent
+                await storeActiveContacts(contact); // Update the contact in indexedDB
                 logMessage(`Email sent to ${logContact}`);
 
                 const delay = leftToSendCount.current > 1 ? emailOptions.delay : fullProgressBarDelay;

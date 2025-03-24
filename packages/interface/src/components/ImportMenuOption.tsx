@@ -2,7 +2,7 @@ import { MenuView } from "radzionkit";
 import { RefreshIcon } from "radzionkit/ui/icons/RefreshIcon";
 import { ChangeEvent, useRef } from "react";
 import { ToastContent, toast } from "react-toastify";
-import { ImportStats } from "../types/types";
+import { ImportStats } from "../types/typesI3C";
 import { useStoreActions } from "../hooks/storeHooks";
 import { importToLocalStorage } from "../helpers/importToLocalStorage";
 import { MenuOption } from "./customRadzionkit/MenuOption";

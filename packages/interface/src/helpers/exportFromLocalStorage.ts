@@ -1,52 +1,68 @@
 import { BlobWriter, TextReader, ZipWriter } from "@zip.js/zip.js";
 import { ContactI3C } from "../types/typesI3C";
-import { STORAGE_KEY, StorageKey } from "../constants/constants";
+import {
+    METADATA_KEY,
+    STORE,
+    getActiveContacts,
+    getDeletedContacts,
+    getMetadata,
+    getSendingLog,
+    storeMetadataKey,
+} from "./indexedDB";
 
 export async function exportFromLocalStorage() {
     // Export date is used at import to avoid duplications
-    localStorage.setItem(STORAGE_KEY.EXPORT_DATE, Date.now().toString());
+    storeMetadataKey(Date.now(), METADATA_KEY.EXPORT_DATE);
 
     // Create a zip file
     const blobWriter = new BlobWriter("application/zip");
     const zipWriter = new ZipWriter(blobWriter);
 
     // Add each localStorage item to the zip
-    for (const property in STORAGE_KEY) {
-        const key = STORAGE_KEY[property as StorageKey];
-        const data = localStorage.getItem(key);
+    for (const property in STORE) {
+        const key = STORE[property as keyof typeof STORE];
+        const data =
+            key === "activeContacts"
+                ? await getActiveContacts()
+                : key === "deletedContacts"
+                  ? await getDeletedContacts()
+                  : key === "sendingLog"
+                    ? await getSendingLog()
+                    : key === "metadata"
+                      ? await getMetadata()
+                      : "";
+
         if (data) {
             // Parse data and extract fields to be exported
             const dataToExport =
-                key === "contactsI3C_exportDate" ||
-                key === "contactsI3C_lastImportExportDate" ||
-                key === "contactsI3C_sendingLog"
-                    ? data
-                    : key === "contactsI3C"
+                key === "activeContacts"
+                    ? JSON.stringify(
+                          (data as ContactI3C[]).map(
+                              (d): Partial<ContactI3C> => ({
+                                  uid: d.uid,
+                                  sentDate: d.sentDate,
+                                  sentCount: d.sentCount,
+                                  customFrontend01: d.customFrontend01,
+                                  customFrontend02: d.customFrontend02,
+                              })
+                          )
+                      )
+                    : key === "deletedContacts"
                       ? JSON.stringify(
-                            (JSON.parse(data) as ContactI3C[]).map(
+                            (data as ContactI3C[]).map(
                                 (d): Partial<ContactI3C> => ({
                                     uid: d.uid,
                                     sentDate: d.sentDate,
                                     sentCount: d.sentCount,
+                                    deletionDate: d.deletionDate,
                                     customFrontend01: d.customFrontend01,
                                     customFrontend02: d.customFrontend02,
                                 })
                             )
                         )
-                      : key === "contactsI3C_deleted"
-                        ? JSON.stringify(
-                              (JSON.parse(data) as ContactI3C[]).map(
-                                  (d): Partial<ContactI3C> => ({
-                                      uid: d.uid,
-                                      sentDate: d.sentDate,
-                                      sentCount: d.sentCount,
-                                      deletionDate: d.deletionDate,
-                                      customFrontend01: d.customFrontend01,
-                                      customFrontend02: d.customFrontend02,
-                                  })
-                              )
-                          )
-                        : `exportFromLocalStorage -> missing check for key: ${key}`;
+                      : key === "sendingLog" || key === "metadata"
+                        ? JSON.stringify(data)
+                        : `Error: Missing check for key: ${key}`;
 
             await zipWriter.add(`${key}.json`, new TextReader(dataToExport));
         }

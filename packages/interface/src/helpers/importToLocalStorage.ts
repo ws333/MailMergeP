@@ -1,18 +1,24 @@
 import { BlobReader, Entry, TextWriter, ZipReader } from "@zip.js/zip.js";
-import { ImportStats } from "../types/types";
-import { STORAGE_KEY, sessionFinishedText, zeroWidtSpace } from "../constants/constants";
+import { ImportStats } from "../types/typesI3C";
+import { ImportData, SendingLogEntry } from "../types/typesI3C";
 import {
-    getLocalStorageActiveContacts,
-    getLocalStorageDeletedContacts,
-    getLocalStorageLastImportExportDate,
-    saveLocalStorageActiveContacts,
-    saveLocalStorageDeletedContacts,
-    saveLocalStorageLastImportExportDate,
-} from "./localStorage";
-import { ContactState, ImportData, mergeContacts } from "./mergeContacts";
+    METADATA_KEY,
+    STORE,
+    getActiveContacts,
+    getDeletedContacts,
+    getLastImportExportDate,
+    storeActiveContacts,
+    storeDeletedContacts,
+    storeMetadataKey,
+    storeSendingLog,
+} from "./indexedDB";
+import { ContactState, mergeContacts } from "./mergeContacts";
 
 export async function importToLocalStorage(file: File): Promise<ImportStats> {
-    const importData: ImportData = { contacts: { active: [], deleted: [] }, exportDate: 0, lastImportExportDate: 0 };
+    const importData: ImportData = {
+        contacts: { active: [], deleted: [] },
+        metadata: { exportDate: 0, lastImportExportDate: 0 },
+    };
 
     // Create a zip reader
     const zipReader = new ZipReader(new BlobReader(file));
@@ -30,46 +36,41 @@ export async function importToLocalStorage(file: File): Promise<ImportStats> {
 
         if (!content) continue;
 
-        if (fileName === `${STORAGE_KEY.EXPORT_DATE}.json`) {
-            importData.exportDate = Number(content) || 0;
-            continue;
-        }
-
-        if (fileName === `${STORAGE_KEY.LAST_IMPORT_EXPORT_DATE}.json`) {
-            importData.lastImportExportDate = Number(content) || 0;
-            continue;
-        }
-
-        if (fileName === `${STORAGE_KEY.CONTACTS}.json`) {
+        if (fileName === `${STORE.ACTIVE_CONTACTS}.json`) {
             importData.contacts.active = JSON.parse(content);
             continue;
         }
 
-        if (fileName === `${STORAGE_KEY.CONTACTS_DELETED}.json`) {
+        if (fileName === `${STORE.DELETED_CONTACTS}.json`) {
             importData.contacts.deleted = JSON.parse(content);
             continue;
         }
 
-        if (fileName === `${STORAGE_KEY.SENDING_LOG}.json`) {
+        if (fileName === `${STORE.SENDING_LOG}.json`) {
             logsProcessed = (await mergeSendingLogs(content)) || 0;
             continue;
         }
 
-        console.error("importToLocalStorage -> entry in zip file not handled:", fileName);
+        if (fileName === `${STORE.METADATA}.json`) {
+            importData.metadata = JSON.parse(content);
+            continue;
+        }
+
+        console.warn("importToLocalStorage -> entry in zip file not handled:", fileName);
     }
 
     await zipReader.close();
 
     const currentContactState: ContactState = {
-        active: getLocalStorageActiveContacts(),
-        deleted: getLocalStorageDeletedContacts(),
-        lastImportExportDate: getLocalStorageLastImportExportDate(),
+        active: await getActiveContacts(),
+        deleted: await getDeletedContacts(),
+        lastImportExportDate: await getLastImportExportDate(),
     };
 
     const [newContactState, importContactsStats] = mergeContacts(currentContactState, importData);
-    saveLocalStorageActiveContacts(newContactState.active);
-    saveLocalStorageDeletedContacts(newContactState.deleted);
-    saveLocalStorageLastImportExportDate(importData.exportDate);
+    await storeActiveContacts(newContactState.active);
+    await storeDeletedContacts(newContactState.deleted);
+    await storeMetadataKey(importData.metadata.exportDate, METADATA_KEY.LAST_IMPORT_EXPORT_DATE);
 
     return { ...importContactsStats, logsProcessed };
 }
@@ -77,26 +78,11 @@ export async function importToLocalStorage(file: File): Promise<ImportStats> {
 async function mergeSendingLogs(importedData: string) {
     try {
         // Parse imported logs
-        const importedLogs: string[] = JSON.parse(importedData);
+        const importedLogs: SendingLogEntry[] = JSON.parse(importedData);
 
-        // Get existing logs
-        const existingLogsString = localStorage.getItem(STORAGE_KEY.SENDING_LOG);
-        const existingLogs: string[] = JSON.parse(existingLogsString ?? "[]");
+        // Merge with existing logs, timestamp is key so no duplicates are created
+        await storeSendingLog(importedLogs);
 
-        const allLogs = [...existingLogs, ...importedLogs];
-
-        // Remove any duplicates
-        const logsSet = new Set(allLogs);
-        logsSet.delete(zeroWidtSpace);
-        const uniqueLogs = [...logsSet];
-
-        // Reinsert newlines by inserting a zero width space before each sessionFinishedText
-        const mergedLogs = uniqueLogs.reduce<string[]>(
-            (acc, cur) => (cur.includes(sessionFinishedText) ? [...acc, zeroWidtSpace, cur] : [...acc, cur]),
-            []
-        );
-
-        localStorage.setItem(STORAGE_KEY.SENDING_LOG, JSON.stringify(mergedLogs));
         return importedLogs.length;
     } catch (error) {
         console.error("importToLocalStorage -> failed to merge sending logs:", error);

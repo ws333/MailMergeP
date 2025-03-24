@@ -1,7 +1,7 @@
 import { ActionCreator } from "easy-peasy";
 import { UserDialog } from "../types/modelTypes";
 import TextDeletingData from "../components/dialogTexts/TextDeletingData";
-import { resetLocalStorage } from "./localStorage";
+import { resetStorage } from "./indexedDB";
 
 type Args = {
     initiateForcedRender: ActionCreator<void>;
@@ -14,7 +14,7 @@ export function showDeleteHistoryDialog({ initiateForcedRender, setUserDialog }:
         message: TextDeletingData,
         confirmActionText: "Confirm deletion",
         onConfirm: () => {
-            resetLocalStorage();
+            resetStorage();
             setUserDialog({ message: "Sending history deleted!" });
             initiateForcedRender();
             console.log("Sending data has been deleted!");
