@@ -1,9 +1,8 @@
 import { useEffect } from "react";
+import { maxCountOptions } from "../constants/constants";
 import { fetchAndMergeContacts, fetchOnlineNations } from "../helpers/fetchAndMergeContacts";
 import { isExtension } from "../helpers/isExtension";
 import { useStoreActions, useStoreState } from "./storeHooks";
-
-const maxCountOptions = [5, 50, 100, 200, 500, 1000];
 
 const oneHour = 1000 * 60 * 60;
 const oneDay = oneHour * 24;

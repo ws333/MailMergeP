@@ -14,6 +14,8 @@ export const minDelay = 3; // Minimum delay between emails being sent in seconds
 export const defaultRandomWindow = 1;
 export const fullProgressBarDelay = 2;
 
+export const maxCountOptions = [5, 10, 25, 50, 75, 100, 150, 200, 250, 300, 400, 500, 600, 700, 800, 900, 1000];
+
 export const NATIONS_CSV_URL = "https://iase.one/contact_lists/nations.csv";
 export const NATIONS_FALLBACK = ["EU", "FR", "GB", "NO"];
 

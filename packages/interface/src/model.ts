@@ -4,11 +4,10 @@
  */
 import { action, actionOn, computed, thunk } from "easy-peasy";
 import type { Model } from "./types/modelTypes";
+import { maxCountOptions } from "./constants/constants";
 import TextEndingSession from "./components/dialogTexts/TextEndingSession";
 import { messageParent } from "./service";
 import { delay as delayPromise, formatTime, parseSpreadsheet } from "./utils";
-
-const maxCountOptions = [5, 50, 100, 200, 500, 1000];
 
 export const model: Model = {
     locale: {
@@ -193,7 +192,7 @@ export const model: Model = {
         isLoading: true,
         setIsLoading: action((state, payload) => ({ ...state, isLoading: payload })),
 
-        maxCount: maxCountOptions[1],
+        maxCount: maxCountOptions[5],
         _setMaxCount: action((state, payload) => ({ ...state, maxCount: payload })), // Internal use only
         setMaxCount: thunk((_, payload, { getStoreState, getStoreActions }) => {
             const storeState = getStoreState();
