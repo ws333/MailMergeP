@@ -1,6 +1,6 @@
 import { useEffect } from "react";
-import { __DEV__ } from "../constants/constants";
 import { fetchAndMergeContacts, fetchOnlineNations } from "../helpers/fetchAndMergeContacts";
+import { isExtension } from "../helpers/isExtension";
 import { useStoreActions, useStoreState } from "./storeHooks";
 
 const maxCountOptions = [5, 50, 100, 200, 500, 1000];
@@ -50,7 +50,7 @@ function useContactList() {
             try {
                 const _nations = await fetchOnlineNations(controller.signal);
                 setNationOptionsFetched(_nations);
-                if (__DEV__) setIsSelectedAllNations(true);
+                if (!isExtension()) setIsSelectedAllNations(true);
 
                 const merged = await fetchAndMergeContacts(controller.signal);
                 setContacts(merged);

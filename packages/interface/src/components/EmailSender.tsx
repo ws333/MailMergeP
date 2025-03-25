@@ -12,6 +12,7 @@ import { useContactList } from "../hooks/useContactList";
 import { useEmailOptions } from "../hooks/useEmailOptions";
 import { useSingleContact } from "../hooks/useSingleContact";
 import { storeActiveContacts } from "../helpers/indexedDB";
+import { isExtension } from "../helpers/isExtension";
 import { renderEmail } from "../helpers/renderEmail";
 import { logSendingMessage, readSendingLog } from "../helpers/sendingLog";
 import { validateEmail } from "../helpers/validateEmail";
@@ -30,7 +31,9 @@ import SingleContact from "./SingleContact";
 import "./EmailSender.css";
 
 const EmailSender = () => {
-    const [message, setMessage] = useState<string>("To begin select contact lists to process above");
+    const [message, setMessage] = useState<string>(
+        isExtension() ? "Send disabled in extension while developing" : "To begin select contact lists to process above"
+    );
     const [endSession, setEndSession] = useState(false);
     const [isSending, setIsSending] = useState(false);
     const [sendingLog, setSendingLog] = useState<string[]>([]);
@@ -160,6 +163,7 @@ const EmailSender = () => {
     };
 
     const sendButtonDisabled =
+        isExtension() || // To avoid sending emails from the extension while developing
         isSending ||
         controller.current.signal.aborted ||
         checkInProgress.current ||
