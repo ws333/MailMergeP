@@ -19,7 +19,7 @@ function SelectNations({ useCL, isSending }: Props) {
 
     return (
         <div className="select-nations">
-            <div className="nation-options">
+            <div>
                 <div className="title-container">
                     <label className="title">Available contacts</label>
                 </div>
@@ -53,15 +53,20 @@ function SelectNations({ useCL, isSending }: Props) {
                                 </label>
                             ))}
                         </div>
+                        <div className="selected-info">
+                            <div>
+                                <div>Selected contacts</div>
+                                <div>Not sent to last 3 months</div>
+                            </div>
+                            <div>
+                                <div>{useCL.selectedContacts.length}</div>
+                                <div>{useCL.selectedContactsNotSent.length}</div>
+                            </div>
+                        </div>
+                        <SentCounts useCL={useCL} />
                     </>
                 )}
             </div>
-
-            <div className="selected-info">
-                <div>Selected contacts {useCL.selectedContacts.length}</div>
-                <div>Selected not sent {useCL.selectedContactsNotSent.length}</div>
-            </div>
-            <SentCounts useCL={useCL} />
         </div>
     );
 }
