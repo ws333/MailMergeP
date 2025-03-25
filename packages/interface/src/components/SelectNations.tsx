@@ -1,13 +1,14 @@
 import { UseContactListReturnType } from "../hooks/useContactList";
 import LoadingContacts from "./LoadingContacts";
+import { SentCounts } from "./SentCounts";
 import "./SelectNations.css";
 
-type SelectNationsProps = {
+type Props = {
     useCL: UseContactListReturnType;
     isSending: boolean;
 };
 
-function SelectNations({ useCL, isSending }: SelectNationsProps) {
+function SelectNations({ useCL, isSending }: Props) {
     const onChangeSelectAll = () => {
         useCL.toggleIsSelectedAllNations();
     };
@@ -60,24 +61,7 @@ function SelectNations({ useCL, isSending }: SelectNationsProps) {
                 <div>Selected contacts {useCL.selectedContacts.length}</div>
                 <div>Selected not sent {useCL.selectedContactsNotSent.length}</div>
             </div>
-            <div className="container_sent_counts">
-                <div className="column_left_sent_counts">
-                    <div>Total sent count</div>
-                    <div>Last hour</div>
-                    <div>24 hours</div>
-                    <div>7 days</div>
-                    <div>30 days</div>
-                    <div>3 months</div>
-                </div>
-                <div className="column_right_sent_counts">
-                    <div>{useCL.totalSentCount}</div>
-                    <div>{useCL.totalSentCountLastHour}</div>
-                    <div>{useCL.totalSentCount24Hours}</div>
-                    <div>{useCL.totalSentCountLast7Days}</div>
-                    <div>{useCL.totalSentCountLast30Days}</div>
-                    <div>{useCL.totalSentCountLast3Months}</div>
-                </div>
-            </div>
+            <SentCounts useCL={useCL} />
         </div>
     );
 }

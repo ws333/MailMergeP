@@ -1,0 +1,58 @@
+/* Make the panel width dynamic and fill its container */
+.sent-counts-panel {
+    width: 100%;
+    border: 1px solid #333;
+    border-radius: 5px !important;
+}
+
+/* Override styles in the ExpandablePanel component */
+.sent-counts-panel > div {
+    padding: 16px !important;
+    background-color: #222 !important;
+}
+
+/* Target the header content container if it has padding */
+.sent-counts-panel [role="button"] > div {
+    padding: 0 !important;
+}
+
+/* Container for the header with two columns */
+.container_header_sent_counts {
+    display: grid;
+    grid-template-columns: 1fr auto; /* Left content takes available space, right is auto-sized */
+    width: 100%;
+}
+
+/* Left column should expand to fill available space in the grid */
+.column_left_header_sent_counts {
+    width: 100%;
+}
+
+/* Right column with auto width and right-aligned text */
+.column_right_header_sent_counts {
+    text-align: right;
+    margin-right: 16px !important;
+}
+
+/* Make text inside right align */
+.column_right_sent_counts > div {
+    display: block;
+    text-align: right;
+}
+
+/* Container for the two columns */
+.container_sent_counts {
+    display: grid;
+    grid-template-columns: 1fr auto; /* Left content takes available space, right is auto-sized */
+    width: 100%;
+    padding: 10px !important;
+}
+
+/* Add styles for right column in content to match header behavior */
+.column_right_sent_counts {
+    margin-right: 42px !important;
+}
+
+.container_sent_counts div {
+    margin: 3px 0px 3px 0px;
+}
