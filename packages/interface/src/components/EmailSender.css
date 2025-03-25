@@ -74,14 +74,18 @@ p {
     border-radius: 13px;
 }
 
+.no-wrap {
+    white-space: nowrap;
+}
+
+.progress_bar {
+    width: 100%;
+}
+
 .section_sending_progress {
     display: flex;
     flex-direction: column;
     align-items: center;
     margin-top: 0.5rem;
     width: 50vw;
-}
-
-.progress_bar {
-    width: 100%;
 }
