@@ -1,20 +1,17 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Email } from "../types/modelTypes";
 import { ContactI3C, LogMessageOptions } from "../types/typesI3C";
-import {
-    SINGLE_CONTACT_MODE,
-    defaultRandomWindow,
-    fullProgressBarDelay,
-    sessionFinishedText,
-} from "../constants/constants";
+import { SINGLE_CONTACT_MODE, defaultRandomWindow, fullProgressBarDelay } from "../constants/constants";
 import { useStoreActions, useStoreState } from "../hooks/storeHooks";
 import { useContactList } from "../hooks/useContactList";
 import { useEmailOptions } from "../hooks/useEmailOptions";
 import { useSingleContact } from "../hooks/useSingleContact";
+import { getSessionFinishedText } from "../helpers/getSessionFinishedText";
 import { storeActiveContacts } from "../helpers/indexedDB";
 import { isExtension } from "../helpers/isExtension";
 import { renderEmail } from "../helpers/renderEmail";
 import { logSendingMessage, readSendingLog } from "../helpers/sendingLog";
+import { checkForDangelingSession, clearSessionState, updateSessionState } from "../helpers/sessionState";
 import { validateEmail } from "../helpers/validateEmail";
 import { waitRandomSeconds } from "../helpers/waitRandomSeconds";
 import ButtonCancel from "./ButtonCancel";
@@ -57,9 +54,11 @@ const EmailSender = () => {
     useEffect(() => {
         console.log(`Updating sendingLog after reset on render #${forcedRender}`);
         async function readLog() {
+            await checkForDangelingSession();
             const storedLog = await readSendingLog();
             setSendingLog(storedLog);
         }
+
         void readLog();
     }, [forcedRender]);
 
@@ -79,9 +78,10 @@ const EmailSender = () => {
             ) {
                 checkInProgress.current = true;
                 await waitRandomSeconds(fullProgressBarDelay, 0); // Let progressbar stay at 100% for a few seconds
-                const message = `${sessionFinishedText} ${useCL.emailsSent.toString()} emails were sent.`;
+                const message = getSessionFinishedText(useCL.emailsSent);
                 setMessage(message);
                 logMessage(message, { addNewline: true });
+                clearSessionState();
                 checkInProgress.current = false;
                 useCL.setEmailsSent(0);
                 setEndSession(false);
@@ -120,7 +120,6 @@ const EmailSender = () => {
                 const sentStatus = await prepareAndSendEmail(contact);
                 if (!sentStatus) return;
 
-                useCL.setEmailsSent((count) => ++count);
                 contact.sentDate = Date.now();
                 contact.sentCount++;
                 await storeActiveContacts(contact); // Update the contact in indexedDB
@@ -128,6 +127,14 @@ const EmailSender = () => {
 
                 const delay = leftToSendCount.current > 1 ? emailOptions.delay : fullProgressBarDelay;
                 const randomWindow = leftToSendCount.current > 1 ? defaultRandomWindow : 0;
+
+                // Important to update session state before the the wait
+                useCL.setEmailsSent((count) => {
+                    const newCount = ++count;
+                    updateSessionState(newCount, delay);
+                    return newCount;
+                });
+
                 await waitRandomSeconds(delay, randomWindow, { signal: controller.current.signal });
             } catch (error) {
                 console.warn("*Debug* -> EmailSender.tsx -> handleSendEmails -> error:", error);

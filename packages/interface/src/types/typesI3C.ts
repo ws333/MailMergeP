@@ -47,4 +47,9 @@ export type SendingLogEntry = {
     message: string;
 };
 
+export type SessionState = {
+    emailsSent: number;
+    timestamp: number;
+};
+
 export type Subjects = Record<KeyOfEmailComponents, string[]>;

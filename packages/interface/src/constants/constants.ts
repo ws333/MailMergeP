@@ -21,6 +21,8 @@ export const NATIONS_FALLBACK = ["EU", "FR", "GB", "NO"];
 
 export const sessionFinishedText = "Session finished!";
 
+export const sessionStateKey = "sessionState";
+
 // Used to send to just one specified contact per session, i.e. disable the use of the contacts list.
 // export const SINGLE_CONTACT_MODE = true;
 export const SINGLE_CONTACT_MODE = import.meta.env.VITE_SINGLE_CONTACT_MODE === "1";
