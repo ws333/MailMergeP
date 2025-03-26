@@ -54,6 +54,7 @@
         "build-addon": "rm -rf addon && cp -rL packages/thunderbird-extension/dist addon && cd addon && bestzip ../addon.zip *",
         "package-addon": "mv addon.zip iases3@iase.one.xpi",
         "build-and-package": "npm run build && npm run build-addon && echo \"\" && echo BUNDLING $(cat addon/manifest.json |grep '\"version\"') && npm run package-addon",
+        "find-unused-files": "npx tsx scripts/run-analyze.ts",
         "watch": "tsx watch-build.ts",
         "test": "vitest packages/*"
     },
