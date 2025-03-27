@@ -1,5 +1,6 @@
 import { BlobWriter, TextReader, ZipWriter } from "@zip.js/zip.js";
 import { ContactI3C } from "../types/typesI3C";
+import { zipPassword } from "../constants/constants";
 import {
     METADATA_KEY,
     STORE,
@@ -14,9 +15,14 @@ export async function exportFromLocalStorage() {
     // Export date is used at import to avoid duplications
     storeMetadataKey(Date.now(), METADATA_KEY.EXPORT_DATE);
 
-    // Create a zip file
+    // Create a zip file with encryption options if password is provided
     const blobWriter = new BlobWriter("application/zip");
-    const zipWriter = new ZipWriter(blobWriter);
+    const zipWriter = new ZipWriter(blobWriter, {
+        // Add encryption options when password is provided
+        password: zipPassword,
+        // Use AES encryption when a password is provided
+        encryptionStrength: 3, // 3 is for AES-256
+    });
 
     // Add each localStorage item to the zip
     for (const property in STORE) {

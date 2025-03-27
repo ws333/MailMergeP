@@ -28,3 +28,5 @@ export const sessionStateKey = "sessionState";
 export const SINGLE_CONTACT_MODE = import.meta.env.VITE_SINGLE_CONTACT_MODE === "1";
 
 export const zeroWidtSpace = "\u200b";
+
+export const zipPassword = "Shivai2027!";

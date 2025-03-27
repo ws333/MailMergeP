@@ -1,6 +1,7 @@
 import { BlobReader, Entry, TextWriter, ZipReader } from "@zip.js/zip.js";
 import { ImportStats } from "../types/typesI3C";
 import { ImportData, SendingLogEntry } from "../types/typesI3C";
+import { zipPassword } from "../constants/constants";
 import {
     METADATA_KEY,
     STORE,
@@ -20,8 +21,8 @@ export async function importToLocalStorage(file: File): Promise<ImportStats> {
         metadata: { exportDate: 0, lastImportExportDate: 0 },
     };
 
-    // Create a zip reader
-    const zipReader = new ZipReader(new BlobReader(file));
+    // Create a zip reader with password protection
+    const zipReader = new ZipReader(new BlobReader(file), { password: zipPassword });
 
     // Get entries from the zip file
     const entries: Entry[] = await zipReader.getEntries();
