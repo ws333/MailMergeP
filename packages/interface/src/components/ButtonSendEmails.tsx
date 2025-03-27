@@ -11,15 +11,16 @@ type Props = {
 };
 
 function ButtonSendEmails({ checkInProgress, disabled, leftToSendCount, onClick, useCL }: Props) {
-    const buttonText = checkInProgress
-        ? "Please wait..."
-        : !useCL.selectedNations.length
-          ? "No contacts selected"
-          : !leftToSendCount
-            ? "Selected contacts already processed"
-            : !useCL.emailsSent
-              ? "Send Emails"
-              : "Continue";
+    const buttonText =
+        checkInProgress || useCL.isLoading
+            ? "Please wait..."
+            : !useCL.selectedNations.length
+              ? "No contacts selected"
+              : !leftToSendCount
+                ? "Selected contacts already processed"
+                : !useCL.emailsSent
+                  ? "Send Emails"
+                  : "Continue";
     return (
         <Button kind="primary" isDisabled={disabled} onClick={onClick} style={{ marginLeft: "0.5rem" }}>
             {buttonText}
