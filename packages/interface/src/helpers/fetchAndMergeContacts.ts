@@ -26,6 +26,10 @@ async function fetchOnlineContacts(signal: AbortSignal): Promise<ContactI3C[]> {
 
 export async function fetchAndMergeContacts(signal: AbortSignal, fetchFn = fetchOnlineContacts): Promise<ContactI3C[]> {
     const onlineContacts = await fetchFn(signal);
+
+    // Dont perform any operations if the fetch was aborted or the onlineContacts array is empty
+    if (signal.aborted || !onlineContacts.length) return [];
+
     await initializeStorage(onlineContacts); // Initialize indexedDB storage
     const localContacts = await getActiveContacts();
 
