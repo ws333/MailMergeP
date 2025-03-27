@@ -33,7 +33,9 @@ export async function fetchAndMergeContacts(signal: AbortSignal, fetchFn = fetch
     const onlineContactUids = new Set(onlineContacts.map((contact) => contact.uid));
 
     // Find local contacts that are not in onlineContacts - O(n) operation
-    const deletedContacts = localContacts.filter((localContact) => !onlineContactUids.has(localContact.uid));
+    const deletedContacts = localContacts.filter(
+        (localContact) => !onlineContactUids.has(localContact.uid) && localContact.sentCount > 0
+    );
 
     // Set deletionDate
     const now = Date.now();
