@@ -364,6 +364,44 @@ export async function resetStorage(): Promise<void> {
     }
 }
 
+// Safely delete the database
+export async function deleteDatabase(): Promise<void> {
+    return new Promise((resolve, reject) => {
+        // Close any open connections first
+        const closeRequest = indexedDB.open(DB_NAME);
+        closeRequest.onsuccess = (event) => {
+            const db = (event.target as IDBOpenDBRequest).result;
+            db.close();
+
+            // Now delete the database
+            const deleteRequest = indexedDB.deleteDatabase(DB_NAME);
+
+            deleteRequest.onsuccess = () => {
+                console.log(`${DB_NAME} database deleted successfully`);
+                resolve();
+            };
+
+            deleteRequest.onerror = (event) => {
+                const error = `Error deleting database: ${(event.target as IDBOpenDBRequest).error}`;
+                console.error(error);
+                reject(new Error(error));
+            };
+
+            deleteRequest.onblocked = () => {
+                const message = `Database deletion blocked. Ensure all connections are closed.`;
+                console.warn(message);
+                reject(new Error(message));
+            };
+        };
+
+        closeRequest.onerror = (event) => {
+            const error = `Error closing database connections: ${(event.target as IDBOpenDBRequest).error}`;
+            console.error(error);
+            reject(new Error(error));
+        };
+    });
+}
+
 // Estimates storage usage // Todo: Check if this works in add-on, requires https://
 export async function getStorageSize(): Promise<StorageEstimate> {
     if (navigator.storage?.estimate) {

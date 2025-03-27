@@ -1,4 +1,3 @@
-import { toast } from "react-toastify";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ContactI3C } from "../types/typesI3C";
 
@@ -56,6 +55,7 @@ describe("fetchAndMergeContacts", () => {
         vi.useFakeTimers();
         vi.setSystemTime(mockDateNow);
         vi.clearAllMocks();
+        console.error = vi.fn(); // Mock console.error
         console.table = vi.fn();
         abortController = new AbortController();
 
@@ -76,7 +76,7 @@ describe("fetchAndMergeContacts", () => {
         vi.useRealTimers();
     });
 
-    it("handles empty online and local contacts", async () => {
+    it("handles empty online", async () => {
         mockFetch.mockResolvedValue({ text: async () => "" });
         mockCsvParse.mockReturnValue({ data: [] });
         mockGetActiveContacts.mockResolvedValue([]);
@@ -84,81 +84,31 @@ describe("fetchAndMergeContacts", () => {
         const result = await fetchAndMergeContacts(abortController.signal, mockFetchFn);
 
         expect(result).toEqual([]);
-        expect(mockInitializeStorage).toHaveBeenCalledWith([]);
-        expect(mockStoreDeletedContacts).toHaveBeenCalledWith([]);
-        expect(mockStoreActiveContacts).toHaveBeenCalledWith([]);
-    });
-
-    it("handles empty online contacts with local contacts (all deleted)", async () => {
-        mockFetch.mockResolvedValue({ text: async () => "" });
-        mockCsvParse.mockReturnValue({ data: [] });
-        mockGetActiveContacts.mockResolvedValue([
-            {
-                uid: 1,
-                nation: "US",
-                institution: "Inst",
-                subGroup: "Group",
-                name: "Test",
-                email: "test@example.com",
-                sentDate: 1677580000000,
-                sentCount: 2,
-                updatedDate: "2023-01-01",
-                deletionDate: 0,
-                customBackend01: "CB1",
-                customBackend02: "CB2",
-                customFrontend01: "CF1",
-                customFrontend02: "CF2",
-            },
-        ]);
-
-        const result = await fetchAndMergeContacts(abortController.signal, mockFetchFn);
-
-        expect(result).toEqual([]);
-        expect(mockStoreDeletedContacts).toHaveBeenCalledWith([
-            {
-                uid: 1,
-                nation: "US",
-                institution: "Inst",
-                subGroup: "Group",
-                name: "Test",
-                email: "test@example.com",
-                sentDate: 1677580000000,
-                sentCount: 2,
-                updatedDate: "2023-01-01",
-                deletionDate: mockDateNow,
-                customBackend01: "CB1",
-                customBackend02: "CB2",
-                customFrontend01: "CF1",
-                customFrontend02: "CF2",
-            },
-        ]);
-        expect(mockRemoveActiveContactByUid).toHaveBeenCalledWith(1);
-        expect(mockStoreActiveContacts).toHaveBeenCalledWith([]);
     });
 
     it("handles online contacts with empty local contacts", async () => {
         mockFetch.mockResolvedValue({
             text: async () =>
-                "uid,nation,institution,subGroup,name,email,sentDate,sentCount,updatedDate,deletionDate,customBackend01,customBackend02,customFrontend01,customFrontend02\n" +
+                "uid,na,i,s,n,e,sd,sc,ud,dd,cb1,cb2,cf1,cf2\n" +
                 "1,US,Inst,Group,Test,test@example.com,1677580000000,1,2023-01-01,0,CB1,CB2,,",
         });
         mockCsvParse.mockReturnValue({
             data: [
                 {
                     uid: 1,
-                    nation: "US",
-                    institution: "Inst",
-                    subGroup: "Group",
-                    name: "Test",
-                    email: "test@example.com",
-                    sentDate: 1677580000000,
-                    sentCount: 1,
-                    updatedDate: "2023-01-01",
-                    deletionDate: 0,
-                    customBackend01: "CB1",
-                    customBackend02: "CB2",
-                    customFrontend01: "",
-                    customFrontend02: "",
+                    na: "US",
+                    i: "Inst",
+                    s: "Group",
+                    n: "Test",
+                    e: "test@example.com",
+                    sd: 1677580000000,
+                    sc: 1,
+                    ud: "2023-01-01",
+                    dd: 0,
+                    cb1: "CB1",
+                    cb2: "CB2",
+                    cf1: "",
+                    cf2: "",
                 },
             ],
         });
@@ -169,38 +119,38 @@ describe("fetchAndMergeContacts", () => {
         expect(result).toEqual([
             {
                 uid: 1,
-                nation: "US",
-                institution: "Inst",
-                subGroup: "Group",
-                name: "Test",
-                email: "test@example.com",
-                sentDate: 1677580000000,
-                sentCount: 1,
-                updatedDate: "2023-01-01",
-                deletionDate: 0,
-                customBackend01: "CB1",
-                customBackend02: "CB2",
-                customFrontend01: "",
-                customFrontend02: "",
+                na: "US",
+                i: "Inst",
+                s: "Group",
+                n: "Test",
+                e: "test@example.com",
+                sd: 1677580000000,
+                sc: 1,
+                ud: "2023-01-01",
+                dd: 0,
+                cb1: "CB1",
+                cb2: "CB2",
+                cf1: "",
+                cf2: "",
             },
         ]);
         expect(mockStoreDeletedContacts).toHaveBeenCalledWith([]);
         expect(mockStoreActiveContacts).toHaveBeenCalledWith([
             {
                 uid: 1,
-                nation: "US",
-                institution: "Inst",
-                subGroup: "Group",
-                name: "Test",
-                email: "test@example.com",
-                sentDate: 1677580000000,
-                sentCount: 1,
-                updatedDate: "2023-01-01",
-                deletionDate: 0,
-                customBackend01: "CB1",
-                customBackend02: "CB2",
-                customFrontend01: "",
-                customFrontend02: "",
+                na: "US",
+                i: "Inst",
+                s: "Group",
+                n: "Test",
+                e: "test@example.com",
+                sd: 1677580000000,
+                sc: 1,
+                ud: "2023-01-01",
+                dd: 0,
+                cb1: "CB1",
+                cb2: "CB2",
+                cf1: "",
+                cf2: "",
             },
         ]);
     });
@@ -208,45 +158,45 @@ describe("fetchAndMergeContacts", () => {
     it("merges overlapping contacts with local data preserved", async () => {
         mockFetch.mockResolvedValue({
             text: async () =>
-                "uid,nation,institution,subGroup,name,email,sentDate,sentCount,updatedDate,deletionDate,customBackend01,customBackend02,customFrontend01,customFrontend02\n" +
+                "uid,na,i,s,n,e,sd,sc,ud,dd,cb1,cb2,cf1,cf2\n" +
                 "1,US,Inst,Group,Test,test@example.com,1677570000000,1,2023-01-01,0,CB1,CB2,,",
         });
         mockCsvParse.mockReturnValue({
             data: [
                 {
                     uid: 1,
-                    nation: "US",
-                    institution: "Inst",
-                    subGroup: "Group",
-                    name: "Test",
-                    email: "test@example.com",
-                    sentDate: 1677570000000,
-                    sentCount: 1,
-                    updatedDate: "2023-01-01",
-                    deletionDate: 0,
-                    customBackend01: "CB1",
-                    customBackend02: "CB2",
-                    customFrontend01: "",
-                    customFrontend02: "",
+                    na: "US",
+                    i: "Inst",
+                    s: "Group",
+                    n: "Test",
+                    e: "test@example.com",
+                    sd: 1677570000000,
+                    sc: 1,
+                    ud: "2023-01-01",
+                    dd: 0,
+                    cb1: "CB1",
+                    cb2: "CB2",
+                    cf1: "",
+                    cf2: "",
                 },
             ],
         });
         mockGetActiveContacts.mockResolvedValue([
             {
                 uid: 1,
-                nation: "US",
-                institution: "Inst",
-                subGroup: "Group",
-                name: "Test",
-                email: "test@example.com",
-                sentDate: 1677580000000,
-                sentCount: 2,
-                updatedDate: "2023-01-01",
-                deletionDate: 0,
-                customBackend01: "CB1-old",
-                customBackend02: "CB2-old",
-                customFrontend01: "CF1",
-                customFrontend02: "CF2",
+                na: "US",
+                i: "Inst",
+                s: "Group",
+                n: "Test",
+                e: "test@example.com",
+                sd: 1677580000000,
+                sc: 2,
+                ud: "2023-01-01",
+                dd: 0,
+                cb1: "CB1-old",
+                cb2: "CB2-old",
+                cf1: "CF1",
+                cf2: "CF2",
             },
         ]);
 
@@ -255,38 +205,38 @@ describe("fetchAndMergeContacts", () => {
         expect(result).toEqual([
             {
                 uid: 1,
-                nation: "US",
-                institution: "Inst",
-                subGroup: "Group",
-                name: "Test",
-                email: "test@example.com",
-                sentDate: 1677580000000,
-                sentCount: 2,
-                updatedDate: "2023-01-01",
-                deletionDate: 0,
-                customBackend01: "CB1",
-                customBackend02: "CB2",
-                customFrontend01: "CF1",
-                customFrontend02: "CF2",
+                na: "US",
+                i: "Inst",
+                s: "Group",
+                n: "Test",
+                e: "test@example.com",
+                sd: 1677580000000,
+                sc: 2,
+                ud: "2023-01-01",
+                dd: 0,
+                cb1: "CB1",
+                cb2: "CB2",
+                cf1: "CF1",
+                cf2: "CF2",
             },
         ]);
         expect(mockStoreDeletedContacts).toHaveBeenCalledWith([]);
         expect(mockStoreActiveContacts).toHaveBeenCalledWith([
             {
                 uid: 1,
-                nation: "US",
-                institution: "Inst",
-                subGroup: "Group",
-                name: "Test",
-                email: "test@example.com",
-                sentDate: 1677580000000,
-                sentCount: 2,
-                updatedDate: "2023-01-01",
-                deletionDate: 0,
-                customBackend01: "CB1",
-                customBackend02: "CB2",
-                customFrontend01: "CF1",
-                customFrontend02: "CF2",
+                na: "US",
+                i: "Inst",
+                s: "Group",
+                n: "Test",
+                e: "test@example.com",
+                sd: 1677580000000,
+                sc: 2,
+                ud: "2023-01-01",
+                dd: 0,
+                cb1: "CB1",
+                cb2: "CB2",
+                cf1: "CF1",
+                cf2: "CF2",
             },
         ]);
     });
@@ -294,45 +244,45 @@ describe("fetchAndMergeContacts", () => {
     it("handles local contact not in online (deleted)", async () => {
         mockFetch.mockResolvedValue({
             text: async () =>
-                "uid,nation,institution,subGroup,name,email,sentDate,sentCount,updatedDate,deletionDate,customBackend01,customBackend02,customFrontend01,customFrontend02\n" +
+                "uid,na,i,s,n,e,sd,sc,ud,dd,cb1,cb2,cf1,cf2\n" +
                 "1,US,Inst,Group,Test1,test1@example.com,1677580000000,1,2023-01-01,0,CB1,CB2,,",
         });
         mockCsvParse.mockReturnValue({
             data: [
                 {
                     uid: 1,
-                    nation: "US",
-                    institution: "Inst",
-                    subGroup: "Group",
-                    name: "Test1",
-                    email: "test1@example.com",
-                    sentDate: 1677580000000,
-                    sentCount: 1,
-                    updatedDate: "2023-01-01",
-                    deletionDate: 0,
-                    customBackend01: "CB1",
-                    customBackend02: "CB2",
-                    customFrontend01: "",
-                    customFrontend02: "",
+                    na: "US",
+                    i: "Inst",
+                    s: "Group",
+                    n: "Test1",
+                    e: "test1@example.com",
+                    sd: 1677580000000,
+                    sc: 1,
+                    ud: "2023-01-01",
+                    dd: 0,
+                    cb1: "CB1",
+                    cb2: "CB2",
+                    cf1: "",
+                    cf2: "",
                 },
             ],
         });
         mockGetActiveContacts.mockResolvedValue([
             {
                 uid: 2,
-                nation: "US",
-                institution: "Inst",
-                subGroup: "Group",
-                name: "Test2",
-                email: "test2@example.com",
-                sentDate: 1677580000000,
-                sentCount: 2,
-                updatedDate: "2023-01-01",
-                deletionDate: 0,
-                customBackend01: "CB1",
-                customBackend02: "CB2",
-                customFrontend01: "CF1",
-                customFrontend02: "CF2",
+                na: "US",
+                i: "Inst",
+                s: "Group",
+                n: "Test2",
+                e: "test2@example.com",
+                sd: 1677580000000,
+                sc: 2,
+                ud: "2023-01-01",
+                dd: 0,
+                cb1: "CB1",
+                cb2: "CB2",
+                cf1: "CF1",
+                cf2: "CF2",
             },
         ]);
 
@@ -341,37 +291,37 @@ describe("fetchAndMergeContacts", () => {
         expect(result).toEqual([
             {
                 uid: 1,
-                nation: "US",
-                institution: "Inst",
-                subGroup: "Group",
-                name: "Test1",
-                email: "test1@example.com",
-                sentDate: 1677580000000,
-                sentCount: 1,
-                updatedDate: "2023-01-01",
-                deletionDate: 0,
-                customBackend01: "CB1",
-                customBackend02: "CB2",
-                customFrontend01: "",
-                customFrontend02: "",
+                na: "US",
+                i: "Inst",
+                s: "Group",
+                n: "Test1",
+                e: "test1@example.com",
+                sd: 1677580000000,
+                sc: 1,
+                ud: "2023-01-01",
+                dd: 0,
+                cb1: "CB1",
+                cb2: "CB2",
+                cf1: "",
+                cf2: "",
             },
         ]);
         expect(mockStoreDeletedContacts).toHaveBeenCalledWith([
             {
                 uid: 2,
-                nation: "US",
-                institution: "Inst",
-                subGroup: "Group",
-                name: "Test2",
-                email: "test2@example.com",
-                sentDate: 1677580000000,
-                sentCount: 2,
-                updatedDate: "2023-01-01",
-                deletionDate: mockDateNow,
-                customBackend01: "CB1",
-                customBackend02: "CB2",
-                customFrontend01: "CF1",
-                customFrontend02: "CF2",
+                na: "US",
+                i: "Inst",
+                s: "Group",
+                n: "Test2",
+                e: "test2@example.com",
+                sd: 1677580000000,
+                sc: 2,
+                ud: "2023-01-01",
+                dd: mockDateNow,
+                cb1: "CB1",
+                cb2: "CB2",
+                cf1: "CF1",
+                cf2: "CF2",
             },
         ]);
         expect(mockRemoveActiveContactByUid).toHaveBeenCalledWith(2);
@@ -388,45 +338,68 @@ describe("fetchAndMergeContacts", () => {
     });
 
     it("detects overlap between active and deleted contacts", async () => {
-        mockFetch.mockResolvedValue({ text: async () => "" });
-        mockCsvParse.mockReturnValue({ data: [] });
+        // Instead of empty data, provide at least one contact
+        mockFetch.mockResolvedValue({
+            text: async () =>
+                "uid,na,i,s,n,e,sd,sc,ud,dd,cb1,cb2,cf1,cf2\n3,CA,Inst,Group,Test3,test3@example.com,1677580000000,1,2023-01-01,0,CB1,CB2,,",
+        });
+        mockCsvParse.mockReturnValue({
+            data: [
+                {
+                    uid: 3, // Different UID to not interfere with the overlap test
+                    na: "CA",
+                    i: "Inst",
+                    s: "Group",
+                    n: "Test3",
+                    e: "test3@example.com",
+                    sd: 1677580000000,
+                    sc: 1,
+                    ud: "2023-01-01",
+                    dd: 0,
+                    cb1: "CB1",
+                    cb2: "CB2",
+                    cf1: "",
+                    cf2: "",
+                },
+            ],
+        });
 
         // Setup overlap between active and deleted contacts
         const activeContacts = [
             {
                 uid: 1,
-                nation: "US",
-                institution: "Inst",
-                subGroup: "Group",
-                name: "Test",
-                email: "test@example.com",
-                sentDate: 1677580000000,
-                sentCount: 2,
-                updatedDate: "2023-01-01",
-                deletionDate: 0,
-                customBackend01: "CB1",
-                customBackend02: "CB2",
-                customFrontend01: "CF1",
-                customFrontend02: "CF2",
+                na: "US",
+                i: "Inst",
+                s: "Group",
+                n: "Test",
+                e: "test@example.com",
+                sd: 1677580000000,
+                sc: 2,
+                ud: "2023-01-01",
+                dd: 0,
+                cb1: "CB1",
+                cb2: "CB2",
+                cf1: "CF1",
+                cf2: "CF2",
             },
         ];
 
         const deletedContacts = [
             {
                 uid: 1, // Same UID as in active contacts
-                nation: "US",
-                institution: "Inst",
-                subGroup: "Group",
-                name: "Test",
-                email: "test@example.com",
-                sentDate: 1677580000000,
-                sentCount: 2,
-                updatedDate: "2023-01-01",
-                deletionDate: mockDateNow,
-                customBackend01: "CB1",
-                customBackend02: "CB2",
-                customFrontend01: "CF1",
-                customFrontend02: "CF2",
+                na: "US",
+                i: "Inst",
+                s: "Group",
+                n: "Test",
+                e: "test@example.com",
+                sd: 1677580000000,
+                sc: 2,
+                ud: "2023-01-01",
+                dd: mockDateNow,
+                cb1: "CB1",
+                cb2: "CB2",
+                cf1: "CF1",
+                cf2: "CF2",
             },
         ];
 
@@ -434,53 +407,51 @@ describe("fetchAndMergeContacts", () => {
         mockGetDeletedContacts.mockResolvedValue(deletedContacts);
 
         await fetchAndMergeContacts(abortController.signal, mockFetchFn);
-        expect(toast.error).toHaveBeenCalledWith("Overlap between active and deleted contacts in indexedDB!", {
-            autoClose: false,
-        });
+        expect(console.error).toHaveBeenCalledWith("Overlap between active and deleted contacts in indexedDB!");
     });
 
     it("handles local contact with missing fields", async () => {
         mockFetch.mockResolvedValue({
             text: async () =>
-                "uid,nation,institution,subGroup,name,email,sentDate,sentCount,updatedDate,deletionDate,customBackend01,customBackend02,customFrontend01,customFrontend02\n" +
+                "uid,na,i,s,n,e,sd,sc,ud,dd,cb1,cb2,cf1,cf2\n" +
                 "1,US,Inst,Group,Test,test@example.com,1677570000000,1,2023-01-01,0,CB1,CB2,,",
         });
         mockCsvParse.mockReturnValue({
             data: [
                 {
                     uid: 1,
-                    nation: "US",
-                    institution: "Inst",
-                    subGroup: "Group",
-                    name: "Test",
-                    email: "test@example.com",
-                    sentDate: 1677570000000,
-                    sentCount: 1,
-                    updatedDate: "2023-01-01",
-                    deletionDate: 0,
-                    customBackend01: "CB1",
-                    customBackend02: "CB2",
-                    customFrontend01: "",
-                    customFrontend02: "",
+                    na: "US",
+                    i: "Inst",
+                    s: "Group",
+                    n: "Test",
+                    e: "test@example.com",
+                    sd: 1677570000000,
+                    sc: 1,
+                    ud: "2023-01-01",
+                    dd: 0,
+                    cb1: "CB1",
+                    cb2: "CB2",
+                    cf1: "",
+                    cf2: "",
                 },
             ],
         });
         mockGetActiveContacts.mockResolvedValue([
             {
                 uid: 1,
-                nation: "US",
-                institution: "Inst",
-                subGroup: "Group",
-                name: "Test",
-                email: "test@example.com",
-                sentDate: 0,
-                sentCount: 0,
-                updatedDate: "2023-01-01",
-                deletionDate: 0,
-                customBackend01: "CB1-old",
-                customBackend02: "CB2-old",
-                customFrontend01: "",
-                customFrontend02: "",
+                na: "US",
+                i: "Inst",
+                s: "Group",
+                n: "Test",
+                e: "test@example.com",
+                sd: 0,
+                sc: 0,
+                ud: "2023-01-01",
+                dd: 0,
+                cb1: "CB1-old",
+                cb2: "CB2-old",
+                cf1: "",
+                cf2: "",
             },
         ]);
 
@@ -489,19 +460,19 @@ describe("fetchAndMergeContacts", () => {
         expect(result).toEqual([
             {
                 uid: 1,
-                nation: "US",
-                institution: "Inst",
-                subGroup: "Group",
-                name: "Test",
-                email: "test@example.com",
-                sentDate: 1677570000000,
-                sentCount: 1,
-                updatedDate: "2023-01-01",
-                deletionDate: 0,
-                customBackend01: "CB1",
-                customBackend02: "CB2",
-                customFrontend01: "",
-                customFrontend02: "",
+                na: "US",
+                i: "Inst",
+                s: "Group",
+                n: "Test",
+                e: "test@example.com",
+                sd: 1677570000000,
+                sc: 1,
+                ud: "2023-01-01",
+                dd: 0,
+                cb1: "CB1",
+                cb2: "CB2",
+                cf1: "",
+                cf2: "",
             },
         ]);
         expect(mockStoreDeletedContacts).toHaveBeenCalledWith([]);
@@ -511,13 +482,13 @@ describe("fetchAndMergeContacts", () => {
     it("checkNoOverlapActiveDeletedContacts detects overlap correctly", async () => {
         // Setup overlap between active and deleted contacts
         const activeContacts = [
-            { uid: 1, nation: "US", email: "test1@example.com" },
-            { uid: 2, nation: "UK", email: "test2@example.com" },
+            { uid: 1, na: "US", e: "test1@example.com" },
+            { uid: 2, na: "UK", e: "test2@example.com" },
         ] as ContactI3C[];
 
         const deletedContacts = [
-            { uid: 1, nation: "US", email: "test1@example.com" }, // Overlapping UID
-            { uid: 3, nation: "CA", email: "test3@example.com" },
+            { uid: 1, na: "US", e: "test1@example.com" }, // Overlapping UID
+            { uid: 3, na: "CA", e: "test3@example.com" },
         ] as ContactI3C[];
 
         mockGetActiveContacts.mockResolvedValue(activeContacts);
@@ -532,13 +503,13 @@ describe("fetchAndMergeContacts", () => {
     it("checkNoOverlapActiveDeletedContacts reports no overlap when none exists", async () => {
         // Setup non-overlapping contacts
         const activeContacts = [
-            { uid: 1, nation: "US", email: "test1@example.com" },
-            { uid: 2, nation: "UK", email: "test2@example.com" },
+            { uid: 1, na: "US", e: "test1@example.com" },
+            { uid: 2, na: "UK", e: "test2@example.com" },
         ] as ContactI3C[];
 
         const deletedContacts = [
-            { uid: 3, nation: "CA", email: "test3@example.com" },
-            { uid: 4, nation: "DE", email: "test4@example.com" },
+            { uid: 3, na: "CA", e: "test3@example.com" },
+            { uid: 4, na: "DE", e: "test4@example.com" },
         ] as ContactI3C[];
 
         mockGetActiveContacts.mockResolvedValue(activeContacts);

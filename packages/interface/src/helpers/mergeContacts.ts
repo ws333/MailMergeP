@@ -2,8 +2,8 @@
 import { ContactI3C, ImportData, ImportStats } from "../types/typesI3C";
 
 export interface ContactState {
-    active: ContactI3C[]; // List of currently active contacts (deletionDate = 0)
-    deleted: ContactI3C[]; // List of deleted contacts (deletionDate > 0)
+    active: ContactI3C[]; // List of currently active contacts (dd = 0)
+    deleted: ContactI3C[]; // List of deleted contacts (dd > 0)
     lastImportExportDate: number; // Timestamp of the most recent import/export applied
 }
 
@@ -34,24 +34,24 @@ export function mergeContacts(current: ContactState, importData: ImportData): [C
             const currentContact = newActive[activeIndex];
             importContactsStats.contactsProcessed++;
 
-            if (importContact.sentDate > currentContact.sentDate) {
+            if (importContact.sd > currentContact.sd) {
                 newActive[activeIndex] = {
                     ...currentContact,
-                    sentDate: importContact.sentDate,
-                    sentCount: importContact.sentCount,
-                    deletionDate: 0,
-                    customFrontend01: importContact.customFrontend01,
-                    customFrontend02: importContact.customFrontend02,
+                    sd: importContact.sd,
+                    sc: importContact.sc,
+                    dd: 0,
+                    cf1: importContact.cf1,
+                    cf2: importContact.cf2,
                 };
             } else if (
-                importContact.sentDate <= currentContact.sentDate &&
+                importContact.sd <= currentContact.sd &&
                 importData.metadata.exportDate > current.lastImportExportDate
             ) {
                 newActive[activeIndex] = {
                     ...currentContact,
-                    sentCount: currentContact.sentCount + importContact.sentCount,
-                    customFrontend01: importContact.customFrontend01,
-                    customFrontend02: importContact.customFrontend02,
+                    sc: currentContact.sc + importContact.sc,
+                    cf1: importContact.cf1,
+                    cf2: importContact.cf2,
                 };
             }
         } else if (deletedIndex !== -1) {
@@ -61,19 +61,19 @@ export function mergeContacts(current: ContactState, importData: ImportData): [C
             // New contact from import, add to deleted list per original requirement
             newDeleted.push({
                 uid: importContact.uid,
-                nation: "",
-                institution: "",
-                subGroup: "",
-                name: "",
-                email: "",
-                sentDate: importContact.sentDate,
-                sentCount: importContact.sentCount,
-                updatedDate: "",
-                customBackend01: "",
-                customBackend02: "",
-                customFrontend01: importContact.customFrontend01,
-                customFrontend02: importContact.customFrontend02,
-                deletionDate: importData.metadata.exportDate,
+                na: "",
+                i: "",
+                s: "",
+                n: "",
+                e: "",
+                ud: "",
+                cb1: "",
+                cb2: "",
+                sd: importContact.sd,
+                sc: importContact.sc,
+                cf1: importContact.cf1,
+                cf2: importContact.cf2,
+                dd: importData.metadata.exportDate,
             });
             importContactsStats.contactsDeleted++;
         }
@@ -89,55 +89,52 @@ export function mergeContacts(current: ContactState, importData: ImportData): [C
             newActive.splice(activeIndex, 1);
             newDeleted.push({
                 ...currentContact,
-                sentDate: importContact.sentDate,
-                sentCount: importContact.sentCount,
-                deletionDate: importContact.deletionDate,
-                customFrontend01: importContact.customFrontend01,
-                customFrontend02: importContact.customFrontend02,
+                sd: importContact.sd,
+                sc: importContact.sc,
+                dd: importContact.dd,
+                cf1: importContact.cf1,
+                cf2: importContact.cf2,
             });
             importContactsStats.contactsDeleted++;
         } else if (deletedIndex !== -1) {
             const deletedContact = newDeleted[deletedIndex];
-            if (
-                importContact.sentDate > deletedContact.sentDate &&
-                importData.metadata.exportDate > current.lastImportExportDate
-            ) {
+            if (importContact.sd > deletedContact.sd && importData.metadata.exportDate > current.lastImportExportDate) {
                 newDeleted[deletedIndex] = {
                     ...deletedContact,
-                    sentDate: importContact.sentDate,
-                    sentCount: importContact.sentCount,
-                    deletionDate: importContact.deletionDate,
-                    customFrontend01: importContact.customFrontend01,
-                    customFrontend02: importContact.customFrontend02,
+                    sd: importContact.sd,
+                    sc: importContact.sc,
+                    dd: importContact.dd,
+                    cf1: importContact.cf1,
+                    cf2: importContact.cf2,
                 };
             } else if (
-                importContact.sentDate <= deletedContact.sentDate &&
-                importContact.sentDate <= deletedContact.deletionDate &&
+                importContact.sd <= deletedContact.sd &&
+                importContact.sd <= deletedContact.dd &&
                 importData.metadata.exportDate > current.lastImportExportDate
             ) {
                 newDeleted[deletedIndex] = {
                     ...deletedContact,
-                    sentCount: deletedContact.sentCount + importContact.sentCount,
-                    customFrontend01: importContact.customFrontend01,
-                    customFrontend02: importContact.customFrontend02,
+                    sc: deletedContact.sc + importContact.sc,
+                    cf1: importContact.cf1,
+                    cf2: importContact.cf2,
                 };
             }
         } else {
             newDeleted.push({
                 uid: importContact.uid,
-                nation: "",
-                institution: "",
-                subGroup: "",
-                name: "",
-                email: "",
-                sentDate: importContact.sentDate,
-                sentCount: importContact.sentCount,
-                updatedDate: "",
-                customBackend01: "",
-                customBackend02: "",
-                customFrontend01: importContact.customFrontend01,
-                customFrontend02: importContact.customFrontend02,
-                deletionDate: importContact.deletionDate,
+                na: "",
+                i: "",
+                s: "",
+                n: "",
+                e: "",
+                ud: "",
+                cb1: "",
+                cb2: "",
+                sd: importContact.sd,
+                sc: importContact.sc,
+                cf1: importContact.cf1,
+                cf2: importContact.cf2,
+                dd: importContact.dd,
             });
             importContactsStats.contactsDeleted++;
         }
@@ -160,11 +157,11 @@ export function deleteContact(state: ContactState, uid: number, deletionTime: nu
 
     const contact = state.active[activeIndex];
     const newActive = state.active.filter((_, i) => i !== activeIndex);
-    const newDeleted = [...state.deleted, { ...contact, deletionDate: deletionTime }];
+    const newDeleted: ContactI3C[] = [...state.deleted, { ...contact, dd: deletionTime }];
 
     return { active: newActive, deleted: newDeleted, lastImportExportDate: state.lastImportExportDate };
 }
 
 export function getDeletedSentCount(state: ContactState): number {
-    return state.deleted.reduce((sum, c) => sum + c.sentCount, 0);
+    return state.deleted.reduce((sum, c) => sum + c.sc, 0);
 }

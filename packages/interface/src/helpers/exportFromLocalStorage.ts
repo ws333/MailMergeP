@@ -46,10 +46,10 @@ export async function exportFromLocalStorage() {
                           (data as ContactI3C[]).map(
                               (d): Partial<ContactI3C> => ({
                                   uid: d.uid,
-                                  sentDate: d.sentDate,
-                                  sentCount: d.sentCount,
-                                  customFrontend01: d.customFrontend01,
-                                  customFrontend02: d.customFrontend02,
+                                  sd: d.sd,
+                                  sc: d.sc,
+                                  cf1: d.cf1,
+                                  cf2: d.cf2,
                               })
                           )
                       )
@@ -58,11 +58,11 @@ export async function exportFromLocalStorage() {
                             (data as ContactI3C[]).map(
                                 (d): Partial<ContactI3C> => ({
                                     uid: d.uid,
-                                    sentDate: d.sentDate,
-                                    sentCount: d.sentCount,
-                                    deletionDate: d.deletionDate,
-                                    customFrontend01: d.customFrontend01,
-                                    customFrontend02: d.customFrontend02,
+                                    sd: d.sd,
+                                    sc: d.sc,
+                                    dd: d.dd,
+                                    cf1: d.cf1,
+                                    cf2: d.cf2,
                                 })
                             )
                         )

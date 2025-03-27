@@ -3,30 +3,27 @@ import { emailComponents } from "../constants/emailTemplates";
 // Modified version of type ContactI3C from IASES3 extractor project
 export type ContactI3C = {
     uid: number; // Artificial Unix timestamp in milliseconds
-    nation: string; // Contact's nation, not exported
-    institution: string; // Contact's institution, not exported
-    subGroup: string; // Contact's subgroup, not exported
-    name: string; // Contact's name, not exported
-    email: string; // Contact's email, not exported
-    updatedDate: string; // Backend-managed timestamp of last update, not modified here
-    sentDate: number; // Unix timestamp of the last email sent
-    sentCount: number; // Total number of emails sent
-    deletionDate: number; // 0 for active contacts, timestamp when moved to deleted file
-    customBackend01: string; // Backend-specific custom field, not exported
-    customBackend02: string; // Backend-specific custom field, not exported
-    customFrontend01: string; // Frontend-specific custom field, included in export
-    customFrontend02: string; // Frontend-specific custom field, included in export
+    na: string; // Contact's nation, not exported
+    i: string; // Contact's institution, not exported
+    s: string; // Contact's subgroup, not exported
+    n: string; // Contact's name, not exported
+    e: string; // Contact's email, not exported
+    ud: string; // Backend-managed timestamp of last update, not modified here
+    cb1: string; // Backend-specific custom field, not exported
+    cb2: string; // Backend-specific custom field, not exported
+    sd: number; // Unix timestamp of the last email sent
+    sc: number; // Total number of emails sent
+    dd: number; // 0 for active contacts, timestamp when moved to deleted file
+    cf1: string; // Frontend-specific custom field, included in export
+    cf2: string; // Frontend-specific custom field, included in export
 };
 
-export type Contact = Pick<ContactI3C, "name" | "email">;
+export type Contact = Pick<ContactI3C, "n" | "e">;
 
 export interface ImportData {
     contacts: {
-        active: Pick<ContactI3C, "uid" | "sentDate" | "sentCount" | "customFrontend01" | "customFrontend02">[];
-        deleted: Pick<
-            ContactI3C,
-            "uid" | "sentDate" | "sentCount" | "deletionDate" | "customFrontend01" | "customFrontend02"
-        >[];
+        active: Pick<ContactI3C, "uid" | "sd" | "sc" | "cf1" | "cf2">[];
+        deleted: Pick<ContactI3C, "uid" | "sd" | "sc" | "dd" | "cf1" | "cf2">[];
     };
     metadata: {
         exportDate: number; // Timestamp when this export was created

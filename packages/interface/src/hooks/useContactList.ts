@@ -76,32 +76,23 @@ function useContactList() {
     const oneMonthAgo = now - oneMonth;
     const threeMonthsAgo = now - threeMonths;
 
-    const selectedContactsNotSent = selectedContacts.filter((contact) => contact.sentDate < threeMonthsAgo);
+    const selectedContactsNotSent = selectedContacts.filter((contact) => contact.sd < threeMonthsAgo);
 
-    const totalSentCount = contacts.reduce((acc, contact) => acc + contact.sentCount, 0);
-    const totalSentCountLastHour = contacts.reduce(
-        (acc, contact) => (contact.sentDate > oneHourAgo ? acc + 1 : acc),
-        0
-    );
-    const totalSentCount24Hours = contacts.reduce((acc, contact) => (contact.sentDate > oneDayAgo ? acc + 1 : acc), 0);
-    const totalSentCountLast7Days = contacts.reduce(
-        (acc, contact) => (contact.sentDate > sevenDaysAgo ? acc + 1 : acc),
-        0
-    );
-    const totalSentCountLast30Days = contacts.reduce(
-        (acc, contact) => (contact.sentDate > oneMonthAgo ? acc + 1 : acc),
-        0
-    );
+    const totalSentCount = contacts.reduce((acc, contact) => acc + contact.sc, 0);
+    const totalSentCountLastHour = contacts.reduce((acc, contact) => (contact.sd > oneHourAgo ? acc + 1 : acc), 0);
+    const totalSentCount24Hours = contacts.reduce((acc, contact) => (contact.sd > oneDayAgo ? acc + 1 : acc), 0);
+    const totalSentCountLast7Days = contacts.reduce((acc, contact) => (contact.sd > sevenDaysAgo ? acc + 1 : acc), 0);
+    const totalSentCountLast30Days = contacts.reduce((acc, contact) => (contact.sd > oneMonthAgo ? acc + 1 : acc), 0);
     const totalSentCountLast3Months = contacts.reduce(
-        (acc, contact) => (contact.sentDate > threeMonthsAgo ? acc + 1 : acc),
+        (acc, contact) => (contact.sd > threeMonthsAgo ? acc + 1 : acc),
         0
     );
 
     const maxSelectedContactsNotSent = Math.min(selectedContactsNotSent.length, maxCount);
 
     const nextContactNotSent = selectedContactsNotSent[0] || {
-        name: "",
-        email: "",
+        n: "",
+        e: "",
     };
 
     return {

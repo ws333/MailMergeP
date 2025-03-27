@@ -174,7 +174,7 @@ export const model: Model = {
         contacts: [],
         setContacts: action((state, payload) => ({ ...state, contacts: [...payload] })),
         selectedContacts: computed((state) =>
-            state.contacts.filter((contact) => state.selectedNations.includes(contact.nation))
+            state.contacts.filter((contact) => state.selectedNations.includes(contact.na))
         ),
 
         emailsSent: 0,

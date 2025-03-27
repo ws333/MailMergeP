@@ -108,7 +108,7 @@ const EmailSender = () => {
             : useCL.selectedContactsNotSent.slice(0, toSendCount);
 
         for await (const contact of toSend) {
-            const logContact = `${contact.name} - ${contact.email}`;
+            const logContact = `${contact.n} - ${contact.e}`;
 
             try {
                 if (controller.current.signal.aborted) {
@@ -120,8 +120,8 @@ const EmailSender = () => {
                 const sentStatus = await prepareAndSendEmail(contact);
                 if (!sentStatus) return;
 
-                contact.sentDate = Date.now();
-                contact.sentCount++;
+                contact.sd = Date.now();
+                contact.sc++;
                 await storeActiveContacts(contact); // Update the contact in indexedDB
                 logMessage(`Email sent to ${logContact}`);
 
@@ -148,9 +148,9 @@ const EmailSender = () => {
     const prepareAndSendEmail = async (contact: ContactI3C) => {
         setMessage("Sending emails...");
 
-        const emailText = renderEmail(emailOptions.EmailComponent, { name: contact.name });
+        const emailText = renderEmail(emailOptions.EmailComponent, { name: contact.n });
         const email: Email = {
-            to: contact.email,
+            to: contact.e,
             subject: emailOptions.selectedSubject,
             body: emailText,
         };
@@ -249,7 +249,7 @@ const EmailSender = () => {
                 <div className="container_email_preview">
                     <EmailPreview
                         Component={emailOptions.EmailComponent}
-                        name={SINGLE_CONTACT_MODE ? singleContactState.name : useCL.nextContactNotSent.name}
+                        name={SINGLE_CONTACT_MODE ? singleContactState.name : useCL.nextContactNotSent.n}
                     />
                 </div>
             </div>

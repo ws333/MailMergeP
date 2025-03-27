@@ -13,22 +13,22 @@ function useSingleContact({ Component }: UseSingleContactArgs) {
 
     const contact: ContactI3C = {
         uid: Date.now(),
-        name,
-        email,
-        nation: "",
-        institution: "",
-        subGroup: "",
-        sentDate: 0,
-        sentCount: 0,
-        updatedDate: "",
-        deletionDate: 0,
-        customBackend01: "",
-        customBackend02: "",
-        customFrontend01: "",
-        customFrontend02: "",
+        n: name,
+        e: email,
+        na: "",
+        i: "",
+        s: "",
+        sd: 0,
+        sc: 0,
+        ud: "",
+        dd: 0,
+        cb1: "",
+        cb2: "",
+        cf1: "",
+        cf2: "",
     };
 
-    const emailText = renderEmail(Component, { name: contact.name });
+    const emailText = renderEmail(Component, { name: contact.n });
 
     return {
         name,

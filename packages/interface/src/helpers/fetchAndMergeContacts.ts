@@ -1,4 +1,3 @@
-import { toast } from "react-toastify";
 import { ContactI3C } from "../types/typesI3C";
 import { CONTACTS_CSV_URL, NATIONS_CSV_URL, NATIONS_FALLBACK } from "../constants/constants";
 import { checkNoOverlapActiveDeletedContacts } from "./checkNoOverlapActiveDeleted";
@@ -38,13 +37,13 @@ export async function fetchAndMergeContacts(signal: AbortSignal, fetchFn = fetch
 
     // Find local contacts that are not in onlineContacts - O(n) operation
     const deletedContacts = localContacts.filter(
-        (localContact) => !onlineContactUids.has(localContact.uid) && localContact.sentCount > 0
+        (localContact) => !onlineContactUids.has(localContact.uid) && localContact.sc > 0
     );
 
     // Set deletionDate
     const now = Date.now();
     deletedContacts.forEach((contact) => {
-        contact.deletionDate = now;
+        contact.dd = now;
     });
     if (deletedContacts.length) console.table(deletedContacts);
 
@@ -58,7 +57,7 @@ export async function fetchAndMergeContacts(signal: AbortSignal, fetchFn = fetch
 
     // Check for no overlap between active and deleted contacts in indexedDB
     const isOverlap = await checkNoOverlapActiveDeletedContacts();
-    if (isOverlap) toast.error("Overlap between active and deleted contacts in indexedDB!", { autoClose: false });
+    if (isOverlap) console.error("Overlap between active and deleted contacts in indexedDB!");
 
     // Create a Map for local contacts using UID as key for O(1) lookups
     const localContactsMap = new Map(localContacts.map((contact) => [contact.uid, contact]));
@@ -66,13 +65,13 @@ export async function fetchAndMergeContacts(signal: AbortSignal, fetchFn = fetch
     // Merge the online contacts with the local contacts - O(n) operation
     const merged = onlineContacts.map((oc): ContactI3C => {
         const local = localContactsMap.get(oc.uid);
-        return local?.sentDate
+        return local?.sd
             ? {
                   ...oc,
-                  sentDate: local.sentDate,
-                  sentCount: local.sentCount,
-                  customFrontend01: local.customFrontend01,
-                  customFrontend02: local.customFrontend02,
+                  sd: local.sd,
+                  sc: local.sc,
+                  cf1: local.cf1,
+                  cf2: local.cf2,
               }
             : oc;
     });
