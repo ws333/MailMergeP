@@ -10,7 +10,7 @@ import { getSessionFinishedText } from "../helpers/getSessionFinishedText";
 import { storeActiveContacts } from "../helpers/indexedDB";
 import { isExtension } from "../helpers/isExtension";
 import { renderEmail } from "../helpers/renderEmail";
-import { logSendingMessage, readSendingLog } from "../helpers/sendingLog";
+import { getLogsToDisplay, logSendingMessage } from "../helpers/sendingLog";
 import { checkForDangelingSession, clearSessionState, updateSessionState } from "../helpers/sessionState";
 import { validateEmail } from "../helpers/validateEmail";
 import { waitRandomSeconds } from "../helpers/waitRandomSeconds";
@@ -55,8 +55,8 @@ const EmailSender = () => {
         console.log(`Updating sendingLog after reset on render #${forcedRender}`);
         async function readLog() {
             await checkForDangelingSession();
-            const storedLog = await readSendingLog();
-            setSendingLog(storedLog);
+            const logsToDisplay = await getLogsToDisplay();
+            setSendingLog(logsToDisplay);
         }
 
         void readLog();

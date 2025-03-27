@@ -1,5 +1,5 @@
 import { SendingLogEntry, SessionState } from "../types/typesI3C";
-import { sessionStateKey } from "../constants/constants";
+import { sessionStateKey, zeroWidtSpace } from "../constants/constants";
 import { getSessionFinishedText } from "./getSessionFinishedText";
 import { storeSendingLog } from "./indexedDB";
 import { isExtension } from "./isExtension";
@@ -44,8 +44,12 @@ export async function checkForDangelingSession() {
     if (sessionState && sessionState.emailsSent > 0) {
         const message = getSessionFinishedText(sessionState.emailsSent);
         const { timestamp } = sessionState;
-        const storeValue: SendingLogEntry = { message, timestamp };
-        storeSendingLog(storeValue);
+        const storeValue: SendingLogEntry[] = [
+            // The timestamp needes to be unique. Displayed in descending order.
+            { message, timestamp },
+            { message: zeroWidtSpace, timestamp: timestamp + 1 },
+        ];
+        await storeSendingLog(storeValue);
         clearSessionState();
     }
 }
