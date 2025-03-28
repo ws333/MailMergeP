@@ -50,6 +50,9 @@ const EmailSender = () => {
     const singleContactState = useSingleContact({
         Component: emailOptions.EmailComponent,
     });
+    const toSendCount = SINGLE_CONTACT_MODE
+        ? [singleContactState.contact]
+        : useCL.selectedContactsNotSent.slice(0, useCL.maxCount - useCL.emailsSent);
 
     useEffect(() => {
         console.log(`Updating sendingLog after reset on render #${forcedRender}`);
@@ -102,12 +105,8 @@ const EmailSender = () => {
 
         setIsSending(true);
         selectedNationsAtSendTime.current = useCL.selectedNations;
-        const toSendCount = useCL.maxCount - useCL.emailsSent;
-        const toSend = SINGLE_CONTACT_MODE
-            ? [singleContactState.contact]
-            : useCL.selectedContactsNotSent.slice(0, toSendCount);
 
-        for await (const contact of toSend) {
+        for await (const contact of toSendCount) {
             const logContact = `${contact.n} - ${contact.e}`;
 
             try {
@@ -165,6 +164,7 @@ const EmailSender = () => {
     };
 
     const onClickCancel = () => {
+        // debugger;
         controller.current.abort();
         setMessage("Sending stopped by user...");
     };
@@ -172,13 +172,18 @@ const EmailSender = () => {
     const sendButtonDisabled =
         isExtension() || // To avoid sending emails from the extension while developing
         isSending ||
+        endSession === true ||
         controller.current.signal.aborted ||
         checkInProgress.current ||
         (SINGLE_CONTACT_MODE
             ? !validateEmail(singleContactState.email) || !singleContactState.name
             : !useCL.selectedContactsNotSent.length);
 
-    const cancelButtonDisabled = useCL.emailsSent === 0 || controller.current.signal.aborted || checkInProgress.current;
+    const cancelButtonDisabled =
+        leftToSendCount.current === 0 ||
+        useCL.emailsSent === 0 ||
+        controller.current.signal.aborted ||
+        checkInProgress.current;
 
     return (
         <div className="container_email_sender">
@@ -226,11 +231,12 @@ const EmailSender = () => {
                             <ButtonEndSession onClick={onClickEndSession} />
                         )}
                         <ButtonSendEmails
-                            disabled={sendButtonDisabled}
                             checkInProgress={checkInProgress.current}
+                            disabled={sendButtonDisabled}
+                            endSession={endSession}
+                            leftToSendCount={leftToSendCount.current}
                             onClick={onClickSendEmail}
                             useCL={useCL}
-                            leftToSendCount={leftToSendCount.current}
                         />
                     </div>
                 )}
@@ -241,6 +247,7 @@ const EmailSender = () => {
                         checkInProgress={checkInProgress.current}
                         disabled={cancelButtonDisabled}
                         onClick={onClickCancel}
+                        toSendCount={leftToSendCount.current}
                     />
                 )}
 

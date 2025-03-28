@@ -6,10 +6,11 @@ type Props = {
     checkInProgress?: boolean;
     disabled?: boolean | string;
     onClick: MouseEventHandler;
+    toSendCount: number;
 };
 
-function ButtonCancel({ aborted, checkInProgress, disabled, onClick }: Props) {
-    const buttonText = aborted || checkInProgress ? "Please wait..." : "Cancel";
+function ButtonCancel({ aborted, checkInProgress, disabled, onClick, toSendCount }: Props) {
+    const buttonText = aborted || checkInProgress || !toSendCount ? "Please wait..." : "Cancel";
     return (
         <Button isDisabled={disabled} onClick={onClick}>
             {buttonText}

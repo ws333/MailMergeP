@@ -5,14 +5,15 @@ import { UseContactListReturnType } from "../hooks/useContactList";
 type Props = {
     checkInProgress: boolean;
     disabled: boolean | string;
+    endSession: boolean;
     leftToSendCount: number;
     onClick: MouseEventHandler;
     useCL: UseContactListReturnType;
 };
 
-function ButtonSendEmails({ checkInProgress, disabled, leftToSendCount, onClick, useCL }: Props) {
+function ButtonSendEmails({ checkInProgress, disabled, endSession, leftToSendCount, onClick, useCL }: Props) {
     const buttonText =
-        checkInProgress || useCL.isLoading
+        checkInProgress || endSession || useCL.isLoading
             ? "Please wait..."
             : !useCL.selectedNations.length
               ? "No contacts selected"
