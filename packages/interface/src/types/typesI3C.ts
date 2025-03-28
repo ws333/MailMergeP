@@ -25,10 +25,16 @@ export interface ImportData {
         active: Pick<ContactI3C, "uid" | "sd" | "sc" | "cf1" | "cf2">[];
         deleted: Pick<ContactI3C, "uid" | "sd" | "sc" | "dd" | "cf1" | "cf2">[];
     };
-    metadata: {
-        exportDate: number; // Timestamp when this export was created
-        lastImportExportDate: number; // Last import/export date from the exported state, for validation
-    };
+    metadata: [
+        {
+            key: "exportDate";
+            value: number; // Timestamp when this export was created
+        },
+        {
+            key: "lastImportExportDate";
+            value: number; // Last import/export date from the exported state, for validation
+        },
+    ];
 }
 
 export type ImportStats = { contactsDeleted: number; contactsProcessed: number; logsProcessed: number };

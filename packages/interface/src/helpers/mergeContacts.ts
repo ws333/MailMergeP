@@ -10,7 +10,10 @@ export interface ContactState {
 type ImportContactsStats = Pick<ImportStats, "contactsDeleted" | "contactsProcessed">;
 
 // Merges imported contact data into the current state, handling both active and deleted contacts separately
-export function mergeContacts(current: ContactState, importData: ImportData): [ContactState, ImportContactsStats] {
+export function mergeContacts(
+    current: ContactState,
+    importData: ImportData
+): [ContactState, ImportContactsStats, Error?] {
     const newActive = [...current.active];
     const newDeleted = [...current.deleted];
 
@@ -19,11 +22,8 @@ export function mergeContacts(current: ContactState, importData: ImportData): [C
         contactsProcessed: 0,
     };
 
-    if (importData.metadata.lastImportExportDate > importData.metadata.exportDate) {
-        throw new Error(
-            `Imported lastImportExportDate (${importData.metadata.lastImportExportDate}) is newer than exportDate (${importData.metadata.exportDate}), indicating an invalid export file.`
-        );
-    }
+    const exportDate = importData.metadata.find((item) => item.key === "exportDate")?.value;
+    if (!exportDate) return [current, importContactsStats, new Error("Export date not found in import data")];
 
     // Merge active contacts from the import
     for (const importContact of importData.contacts.active) {
@@ -43,10 +43,7 @@ export function mergeContacts(current: ContactState, importData: ImportData): [C
                     cf1: importContact.cf1,
                     cf2: importContact.cf2,
                 };
-            } else if (
-                importContact.sd <= currentContact.sd &&
-                importData.metadata.exportDate > current.lastImportExportDate
-            ) {
+            } else if (importContact.sd <= currentContact.sd && exportDate > current.lastImportExportDate) {
                 newActive[activeIndex] = {
                     ...currentContact,
                     sc: currentContact.sc + importContact.sc,
@@ -73,7 +70,7 @@ export function mergeContacts(current: ContactState, importData: ImportData): [C
                 sc: importContact.sc,
                 cf1: importContact.cf1,
                 cf2: importContact.cf2,
-                dd: importData.metadata.exportDate,
+                dd: exportDate,
             });
             importContactsStats.contactsDeleted++;
         }
@@ -98,7 +95,7 @@ export function mergeContacts(current: ContactState, importData: ImportData): [C
             importContactsStats.contactsDeleted++;
         } else if (deletedIndex !== -1) {
             const deletedContact = newDeleted[deletedIndex];
-            if (importContact.sd > deletedContact.sd && importData.metadata.exportDate > current.lastImportExportDate) {
+            if (importContact.sd > deletedContact.sd && exportDate > current.lastImportExportDate) {
                 newDeleted[deletedIndex] = {
                     ...deletedContact,
                     sd: importContact.sd,
@@ -110,7 +107,7 @@ export function mergeContacts(current: ContactState, importData: ImportData): [C
             } else if (
                 importContact.sd <= deletedContact.sd &&
                 importContact.sd <= deletedContact.dd &&
-                importData.metadata.exportDate > current.lastImportExportDate
+                exportDate > current.lastImportExportDate
             ) {
                 newDeleted[deletedIndex] = {
                     ...deletedContact,
@@ -141,9 +138,7 @@ export function mergeContacts(current: ContactState, importData: ImportData): [C
     }
 
     const newLastImportExportDate =
-        importData.metadata.exportDate > current.lastImportExportDate
-            ? importData.metadata.exportDate
-            : current.lastImportExportDate;
+        exportDate > current.lastImportExportDate ? exportDate : current.lastImportExportDate;
 
     return [
         { active: newActive, deleted: newDeleted, lastImportExportDate: newLastImportExportDate },

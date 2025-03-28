@@ -15,10 +15,13 @@ import {
 } from "./indexedDB";
 import { ContactState, mergeContacts } from "./mergeContacts";
 
-export async function importToLocalStorage(file: File): Promise<ImportStats> {
+export async function importToLocalStorage(file: File): Promise<ImportStats | Error> {
     const importData: ImportData = {
         contacts: { active: [], deleted: [] },
-        metadata: { exportDate: 0, lastImportExportDate: 0 },
+        metadata: [
+            { key: "exportDate", value: 0 },
+            { key: "lastImportExportDate", value: 0 },
+        ],
     };
 
     // Create a zip reader with password protection
@@ -68,10 +71,14 @@ export async function importToLocalStorage(file: File): Promise<ImportStats> {
         lastImportExportDate: await getLastImportExportDate(),
     };
 
-    const [newContactState, importContactsStats] = mergeContacts(currentContactState, importData);
+    const [newContactState, importContactsStats, error] = mergeContacts(currentContactState, importData);
+    if (error) return error;
+
     await storeActiveContacts(newContactState.active);
     await storeDeletedContacts(newContactState.deleted);
-    await storeMetadataKey(importData.metadata.exportDate, METADATA_KEY.LAST_IMPORT_EXPORT_DATE);
+    const newlIED = importData.metadata.find((item) => item.key === "exportDate")?.value || -1;
+    if (newlIED === -1) console.warn("importToLocalStorage -> exportDate not found in importData.metadata");
+    await storeMetadataKey(newlIED, METADATA_KEY.LAST_IMPORT_EXPORT_DATE);
 
     return { ...importContactsStats, logsProcessed };
 }

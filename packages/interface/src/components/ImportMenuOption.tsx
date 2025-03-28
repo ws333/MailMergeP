@@ -52,16 +52,24 @@ const ImportMenuOption = ({ view, onClose }: Props) => {
         if (!file) return;
 
         try {
-            const importStats = await importToLocalStorage(file);
+            const importStatsOrError = await importToLocalStorage(file);
 
             // Add event listener with setTimeout to avoid immediate triggering
             setTimeout(() => {
                 document.body.addEventListener("click", onClickDocumentBody);
             }, 300);
 
+            if (importStatsOrError instanceof Error) {
+                toast.dark(ImportStatsComponent as ToastContent, {
+                    data: importStatsOrError,
+                    autoClose: false,
+                });
+                throw importStatsOrError;
+            }
+
             initiateForcedRender();
             toast.dark(ImportStatsComponent as ToastContent, {
-                data: importStats,
+                data: importStatsOrError,
                 autoClose: false,
             });
         } catch (error) {

@@ -28,10 +28,10 @@ describe("mergeContacts", () => {
                 cf2: c.cf2 || "",
             })),
         },
-        metadata: {
-            exportDate,
-            lastImportExportDate,
-        },
+        metadata: [
+            { key: "exportDate", value: exportDate },
+            { key: "lastImportExportDate", value: lastImportExportDate },
+        ],
     });
 
     const expectContactMatch = (actual: ContactI3C, expected: Partial<ContactI3C>) => {
