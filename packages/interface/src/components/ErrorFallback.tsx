@@ -1,7 +1,7 @@
 import { Button, Text } from "radzionkit";
 import { CSSProperties } from "react";
 import { FallbackProps } from "react-error-boundary";
-import HeaderWithUfo from "./HeaderWithUfo";
+import HeaderWithIFO from "./HeaderWithIFO";
 
 const divStyles: CSSProperties = {
     display: "flex",
@@ -25,7 +25,7 @@ function ErrorFallback({ error }: FallbackProps) {
     }
     return (
         <div role="alert" style={divStyles}>
-            <HeaderWithUfo />
+            <HeaderWithIFO />
             <Text size={16} style={textStyles}>
                 {error.message}
             </Text>

@@ -29,6 +29,7 @@ export const logsToDisplaySize = 1000;
 export const maxCountOptions = [5, 10, 25, 50, 75, 100, 150, 200, 250, 300, 400, 500, 600, 700, 800, 900, 1000];
 export const defaultMaxCount = maxCountOptions[5];
 
+export const IASE_URL = "https://www.bashar.org/socialexperiment";
 export const NATIONS_CSV_URL = "https://iase.one/contact_lists/nations.csv";
 export const NATIONS_FALLBACK = ["EU", "FR", "GB", "NO"];
 

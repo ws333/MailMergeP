@@ -1,7 +1,7 @@
 import { Text } from "radzionkit";
 import { Spinner } from "radzionkit/ui/loaders/Spinner";
 import { CSSProperties } from "react";
-import HeaderWithUfo from "./HeaderWithUfo";
+import HeaderWithIFO from "./HeaderWithIFO";
 
 const divStyles: CSSProperties = {
     display: "flex",
@@ -16,7 +16,7 @@ function Loading() {
     return (
         <>
             <div style={divStyles}>
-                <HeaderWithUfo />
+                <HeaderWithIFO />
                 <br />
                 <Text size={42}>
                     <Spinner />

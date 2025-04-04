@@ -1,8 +1,8 @@
 import { useEffect } from "react";
 import { ToastContainer } from "react-toastify";
 import { useStoreActions, useStoreState } from "../hooks/storeHooks";
-import icon from "../../../thunderbird-extension/public/skin/icon64.png";
 import EmailSender from "./EmailSender";
+import IFO from "./IFO";
 import SettingsMenu from "./SettingsMenu";
 import { SendDialog } from "./send-dialog";
 import "./app.css";
@@ -24,7 +24,7 @@ export default function App() {
         <div className="scrollable-container">
             <header className="panel-section panel-section-header">
                 <div className="icon-section-header">
-                    <img className="iases3-icon" src={icon} alt="Interstellar Alliance Social Experiment Step 3 icon" />
+                    <IFO isHovering={false} />
                     <SettingsMenu />
                 </div>
             </header>

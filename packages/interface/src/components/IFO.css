@@ -1,4 +1,33 @@
-/* Animation for the hovering UFO effect - vertical movement */
+.ifo {
+    width: 70px;
+    height: 70px;
+}
+
+/* Glow effect on hover */
+.ifo:hover {
+    /* Enhanced glow effect when user hovers */
+    filter: drop-shadow(0 0 10px rgba(157, 187, 255, 0.9));
+    /* Animation with subtle rotation when user hovers over the IFO */
+    animation:
+        randomHover 8s ease-in-out infinite,
+        wiggle 2s ease-in-out infinite;
+}
+
+/* Combined hover and glow effect */
+.hovering-ifo {
+    /* Using multiple animations to create a more organic movement */
+    animation:
+        randomHover 8s ease-in-out infinite,
+        wiggle 2s ease-in-out infinite;
+    /* Adding a subtle glow effect */
+    filter: drop-shadow(0 0 5px rgba(157, 187, 255, 0.7));
+    /* Smooth transition for hover state */
+    transition: all 0.3s ease;
+    /* Set transform origin to center for better rotation */
+    transform-origin: center center;
+}
+
+/* Animation for the hovering effect - vertical movement */
 @keyframes hover {
     0% {
         transform: translateY(0);
@@ -88,20 +117,6 @@
     }
 }
 
-/* Combined hover and glow effect for the UFO icon */
-.hovering-ufo {
-    /* Using multiple animations to create a more organic movement */
-    animation:
-        randomHover 8s ease-in-out infinite,
-        wiggle 2s ease-in-out infinite;
-    /* Adding a subtle glow effect */
-    filter: drop-shadow(0 0 5px rgba(157, 187, 255, 0.7));
-    /* Smooth transition for hover state */
-    transition: all 0.3s ease;
-    /* Set transform origin to center for better rotation */
-    transform-origin: center center;
-}
-
 /* Combined keyframes for multi-directional movement - kept for reference */
 @keyframes hoverAndDrift {
     0% {
@@ -119,16 +134,6 @@
     100% {
         transform: translate(0, 0);
     }
-}
-
-/* Optional glow effect on hover */
-.hovering-ufo:hover {
-    /* Enhanced glow effect when user hovers */
-    filter: drop-shadow(0 0 10px rgba(157, 187, 255, 0.9));
-    /* Speeds up the animation and adds subtle rotation when user hovers over the UFO */
-    animation:
-        randomHoverFast 3s ease-in-out infinite,
-        wiggle 1s ease-in-out infinite;
 }
 
 /* Faster and more erratic version of the random movement for hover state */
