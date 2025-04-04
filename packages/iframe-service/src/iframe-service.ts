@@ -1,7 +1,6 @@
 /*
  * Provide a messaging api equivalent to what is supplied by Thunderbird when running as an extension
  */
-
 import type { Email, Prefs } from "../../interface/src/types/modelTypes";
 import type { Strings } from "../../interface/src/types/types";
 
@@ -16,6 +15,7 @@ export type MessagePayload = {
         | "GET_LOCALIZED_STRINGS"
         | "SEND_EMAILS"
         | "SEND_EMAIL"
+        | "SEND_EMAIL_STATUS" // Used to keep EmailSender updated in case of failure or cancellation
         | "OPEN_URL"
         | "CANCEL"
         | "INITIALIZE_PARENT";
@@ -27,6 +27,7 @@ export type MessagePayload = {
         strings?: Strings;
         emails?: Email[];
         email?: Email;
+        sendEmailStatus?: browser.compose._SendMessageReturnReturn;
         sendmode?: Prefs["sendmode"];
         url?: string;
     };

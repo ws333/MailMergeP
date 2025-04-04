@@ -1,13 +1,9 @@
 /**
  * This is the interface between the iframe mailMerge UI and the outside world (which has permission to send mail)
  */
+import type { MessagePayload } from "@iases3/iframe-service/src/iframe-service";
+import { getUniqueMessageId } from "./helpers/getUniqueMessageId";
 
-import type { MessagePayload } from "../../iframe-service/src/iframe-service";
-
-let _messageId = 0;
-function getUniqueMessageId() {
-    return _messageId++;
-}
 // We need to avoid sending messages until the parent has initialized,
 // so we set up a promise that gets triggered when the parent has sent its first signal.
 let resolveParentInitialized: (value?: unknown) => void = () => {};
@@ -48,7 +44,7 @@ async function messageParent(payload: Pick<MessagePayload, "type" | "data">) {
 
 // Always listen for an INITIALIZE_PARENT message
 // Until we get this message, we can't send any messages!
-window.addEventListener("message", (e) => {
+window.addEventListener("message", (e: MessageEvent<MessagePayload>) => {
     const data = e.data || {};
     if (data.type === "INITIALIZE_PARENT") {
         // Let the child (us) know that it's safe to send messages to the parent.

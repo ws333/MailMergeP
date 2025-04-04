@@ -1,8 +1,9 @@
 /*
  * Provide a messaging api equivalent to what is supplied by Thunderbird when running as an extension
  */
+import { iframeService } from "@iases3/iframe-service/src/iframe-service";
 import { Email, Prefs } from "../../interface/src/types/modelTypes";
-import { iframeService } from "../../iframe-service/src/iframe-service";
+import { getUniqueMessageId } from "../../interface/src/helpers/getUniqueMessageId";
 
 if (typeof iframeService === "undefined") {
     console.warn("iframeService is undefined. It must be loaded first!");
@@ -98,8 +99,15 @@ try {
 
             // There are theoretically more send options, but https://bugzilla.mozilla.org/show_bug.cgi?id=1747456 is the blocker.
             if (newWin.id) {
-                await browser.compose.sendMessage(newWin.id, {
+                const sentStatus = await browser.compose.sendMessage(newWin.id, {
                     mode: sendmode === "now" ? "sendNow" : "sendLater",
+                });
+
+                // Broadcast status in case of failure or cancellation
+                iframeService.messageChild({
+                    type: "SEND_EMAIL_STATUS",
+                    id: getUniqueMessageId(),
+                    data: { sendEmailStatus: sentStatus },
                 });
             }
         }

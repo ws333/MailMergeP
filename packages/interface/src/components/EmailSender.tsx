@@ -1,3 +1,4 @@
+import { MessagePayload } from "@iases3/iframe-service/src/iframe-service";
 import React, { useEffect, useRef, useState } from "react";
 import { Email } from "../types/modelTypes";
 import { ContactI3C, LogMessageOptions } from "../types/typesI3C";
@@ -93,6 +94,26 @@ const EmailSender = () => {
         void checkIfSessionFinished();
     }, [useCL]);
 
+    useEffect(() => {
+        const handleEmailStatus = (e: MessageEvent<MessagePayload>) => {
+            const message = e.data || {};
+
+            // sendEmailStatus.headerMessageId is null when sending failed or was cancelled
+            if (message.type === "SEND_EMAIL_STATUS" && message.data?.sendEmailStatus?.headerMessageId === null) {
+                controller.current.abort();
+                setMessage(
+                    "Sending of the last email failed or was cancelled by user, if it failed please make sure you are online."
+                );
+            }
+        };
+
+        window.addEventListener("message", handleEmailStatus);
+
+        return () => {
+            window.removeEventListener("message", handleEmailStatus);
+        };
+    }, []);
+
     async function onClickSendEmail(e: React.MouseEvent<HTMLButtonElement>) {
         e.preventDefault();
 
@@ -102,6 +123,8 @@ const EmailSender = () => {
         }
 
         setIsSending(true);
+        setMessage("Sending emails...");
+
         selectedNationsAtSendTime.current = useCL.selectedNations;
 
         for await (const contact of toSendCount) {
@@ -114,8 +137,7 @@ const EmailSender = () => {
                     break;
                 }
 
-                const sentStatus = await prepareAndSendEmail(contact);
-                if (!sentStatus) return;
+                await prepareAndSendEmail(contact);
 
                 contact.sd = Date.now();
                 contact.sc++;
@@ -143,8 +165,6 @@ const EmailSender = () => {
     }
 
     const prepareAndSendEmail = async (contact: ContactI3C) => {
-        setMessage("Sending emails...");
-
         const emailText = renderEmail(emailOptions.EmailComponent, { name: contact.n });
         const email: Email = {
             to: contact.e,
@@ -152,8 +172,7 @@ const EmailSender = () => {
             body: emailText,
         };
 
-        await sendEmail({ email, sendmode: "now" }); // TODO Implement sendmode?
-        return true; // TODO Implement error handling?
+        await sendEmail({ email, sendmode: "now" });
     };
 
     const onClickEndSession = () => {
