@@ -69,9 +69,6 @@ interface ContactList {
     forcedRender: number;
     initiateForcedRender: Action<ContactList>;
 
-    isLoading: boolean;
-    setIsLoading: Action<ContactList, boolean>;
-
     maxCount: number;
     _setMaxCount: Action<ContactList, number>; // Internal use only
     setMaxCount: Thunk<ContactList, number, undefined, Model>;

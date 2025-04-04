@@ -13,7 +13,7 @@ type Props = {
 
 function ButtonSendEmails({ checkInProgress, disabled, endSession, leftToSendCount, onClick, useCL }: Props) {
     const buttonText =
-        checkInProgress || endSession || useCL.isLoading
+        checkInProgress || endSession
             ? "Please wait..."
             : !useCL.selectedNations.length
               ? "No contacts selected"

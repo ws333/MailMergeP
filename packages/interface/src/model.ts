@@ -194,9 +194,6 @@ export const model: Model = {
         forcedRender: 1,
         initiateForcedRender: action((state) => ({ ...state, forcedRender: state.forcedRender + 1 })),
 
-        isLoading: true,
-        setIsLoading: action((state, payload) => ({ ...state, isLoading: payload })),
-
         maxCount: defaultMaxCount,
         _setMaxCount: action((state, payload) => ({ ...state, maxCount: payload })), // Internal use only
         setMaxCount: thunk((_, payload, { getStoreState, getStoreActions }) => {

@@ -28,9 +28,6 @@ function useContactList() {
 
     const forcedRender = useStoreState((state) => state.contactList.forcedRender);
 
-    const isLoading = useStoreState((state) => state.contactList.isLoading);
-    const setIsLoading = useStoreActions((actions) => actions.contactList.setIsLoading);
-
     const maxCount = useStoreState((state) => state.contactList.maxCount);
     const setMaxCount = useStoreActions((actions) => actions.contactList.setMaxCount);
 
@@ -62,19 +59,17 @@ function useContactList() {
     });
 
     useEffect(() => {
-                if (!isExtension()) setIsSelectedAllNations(true);
+        if (!isExtension()) setIsSelectedAllNations(true);
 
         setNationOptionsFetched(_nations);
         setContacts(_contacts);
-                setDeletedContacts(_deletedContacts);
-                setIsLoading(false);
+        setDeletedContacts(_deletedContacts);
     }, [
         _contacts,
         _deletedContacts,
         _nations,
         setContacts,
         setDeletedContacts,
-        setIsLoading,
         setIsSelectedAllNations,
         setNationOptionsFetched,
     ]);
@@ -123,7 +118,6 @@ function useContactList() {
         endSession,
         setEndSession,
         emailsSent,
-        isLoading,
         setEmailsSent,
         maxCount,
         maxCountOptions,
