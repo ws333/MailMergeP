@@ -4,8 +4,7 @@ import { useStoreActions, useStoreState } from "../hooks/storeHooks";
 import EmailSender from "./EmailSender";
 import IFO from "./IFO";
 import SettingsMenu from "./SettingsMenu";
-import { SendDialog } from "./send-dialog";
-import "./app.css";
+import "./App.css";
 
 export default function App() {
     const initialise = useStoreActions((actions) => actions.initialise);
@@ -21,15 +20,14 @@ export default function App() {
     }, [prefs.fileName, parseSpreadsheet]);
 
     return (
-        <div className="scrollable-container">
-            <header className="panel-section panel-section-header">
-                <div className="icon-section-header">
+        <div className="scrollable">
+            <header className="header">
+                <div className="IFO-and-settings">
                     <IFO isHovering={false} />
                     <SettingsMenu />
                 </div>
             </header>
             <EmailSender />
-            <SendDialog />
             <ToastContainer />
         </div>
     );

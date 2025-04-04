@@ -2,7 +2,7 @@ import { ActionCreator } from "easy-peasy";
 import { toast } from "react-toastify";
 import { UserDialog } from "../types/modelTypes";
 import TextDeletingData from "../components/dialogTexts/TextDeletingData";
-import { toastOptions } from "../css/styles";
+import { toastOptions } from "../styles/styles";
 import { resetStorage } from "./indexedDB";
 
 type Args = {

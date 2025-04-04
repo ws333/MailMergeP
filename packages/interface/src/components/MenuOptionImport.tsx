@@ -6,7 +6,7 @@ import { CSSProperties } from "styled-components";
 import { ImportStats } from "../types/typesI3C";
 import { useStoreActions } from "../hooks/storeHooks";
 import { importToLocalStorage } from "../helpers/importToLocalStorage";
-import { toastOptions } from "../css/styles";
+import { toastOptions } from "../styles/styles";
 import { MenuOption } from "./customRadzionkit/MenuOption";
 
 type Props = {

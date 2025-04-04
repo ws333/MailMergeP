@@ -5,9 +5,9 @@ import { Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { model } from "../model";
 import { PersistentStateKey, usePersistentState } from "../state/persistentState";
+import App from "./App";
 import ErrorFallback from "./ErrorFallback";
 import Loading from "./Loading";
-import App from "./app";
 
 const store = createStore(model, { disableImmer: true });
 

@@ -1,15 +1,21 @@
-.scrollable-container {
-    overflow-y: auto;
-    height: 100vh;
+html,
+body {
+    background: #333;
+    box-sizing: border-box;
+    color: white;
+    cursor: default;
+    display: flex;
+    flex-direction: column;
+    font: caption;
+    margin: 0;
+    padding: 0;
+    -moz-user-select: none;
+    user-select: none;
 }
 
-.header-title {
-    margin: 0 2rem;
-}
-
-.iases3-settings-icon {
-    width: 22px;
-    height: 22px;
+body * {
+    box-sizing: border-box;
+    text-align: start;
 }
 
 .disabled,
@@ -17,6 +23,21 @@
     opacity: 0.8;
 }
 
-h2 {
-    margin: 0.5rem;
+.scrollable {
+    overflow-y: auto;
+    height: 100vh;
+}
+
+.IFO-and-settings {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.header {
+    display: flex;
+    flex-direction: row;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+    margin: 0px 22px 0px 14px;
 }
