@@ -23,11 +23,11 @@ export function clearSessionState() {
 
 export async function getSessionState() {
     if (isExtension()) {
-        const sessionState = (await messenger.storage.local.get(sessionStateKey)) as SessionState | undefined;
-        return sessionState;
+        const storedState = await messenger.storage.local.get(sessionStateKey);
+        return storedState[sessionStateKey] ? (JSON.parse(storedState[sessionStateKey]) as SessionState) : undefined;
     } else {
-        const sessionState = localStorage.getItem(sessionStateKey);
-        return sessionState ? (JSON.parse(sessionState) as SessionState) : undefined;
+        const storedState = localStorage.getItem(sessionStateKey);
+        return storedState ? (JSON.parse(storedState) as SessionState) : undefined;
     }
 }
 export function storeSessionState(value: SessionState) {
