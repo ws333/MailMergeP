@@ -120,6 +120,7 @@ const MenuOptionImport = ({ view, onClose }: Props) => {
 
     const onSelectMenuOption = () => {
         fileInputRef.current?.click();
+        onClose();
     };
 
     return (
