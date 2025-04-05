@@ -1,21 +1,23 @@
 import { Tooltip } from "radzionkit/ui/tooltips/Tooltip";
 import { FocusEvent, useEffect, useRef, useState } from "react";
-import { minSendingDelay } from "../constants/constants";
+import { maxCountOptions, minSendingDelay } from "../constants/constants";
 import { KeyOfEmailComponents, emailComponents, subjects } from "../constants/emailTemplates";
-import { UseContactListReturnType } from "../hooks/useContactList";
+import { useStoreActions, useStoreState } from "../hooks/storeHooks";
 import { useEmailOptions } from "../hooks/useEmailOptions";
 import { storeOptionsKey } from "../helpers/indexedDB";
 import { objectKeys } from "../helpers/objectHelpers";
 import "./EmailOptions.css";
 
 export type EmailOptionsProps = {
-    useCL: UseContactListReturnType;
     emailOptions: ReturnType<typeof useEmailOptions>;
     isSending: boolean;
     singleContactMode: boolean;
 };
 
-function EmailOptions({ useCL, emailOptions, isSending, singleContactMode }: EmailOptionsProps) {
+function EmailOptions({ emailOptions, isSending, singleContactMode }: EmailOptionsProps) {
+    const maxCount = useStoreState((state) => state.contactList.maxCount);
+    const setMaxCount = useStoreActions((actions) => actions.contactList.setMaxCount);
+
     const customSubjectRef = useRef<HTMLInputElement>(null);
     if (customSubjectRef.current) {
         customSubjectRef.current.value = emailOptions.customSubject;
@@ -100,11 +102,11 @@ function EmailOptions({ useCL, emailOptions, isSending, singleContactMode }: Ema
                         Number of emails to send in this session
                         <br />
                         <select
-                            value={useCL.maxCount}
+                            value={maxCount}
                             disabled={isSending}
-                            onChange={(e) => useCL.setMaxCount(Number(e.target.value))}
+                            onChange={(e) => setMaxCount(Number(e.target.value))}
                         >
-                            {useCL.maxCountOptions.map((count) => (
+                            {maxCountOptions.map((count) => (
                                 <option key={count} value={count}>
                                     {count}
                                 </option>

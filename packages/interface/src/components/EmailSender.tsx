@@ -39,19 +39,29 @@ const EmailSender = () => {
     const sendEmail = useStoreActions((actions) => actions.sendEmail);
     const controller = useRef(new AbortController());
 
-    const logMessage = (message: string, options?: LogMessageOptions) => {
-        logSendingMessage(message, { setFn: setSendingLog, ...options });
-    };
-
     useUpdateSendingStats(isSending);
-    const useCL = useContactList();
+
+    const {
+        emailsSent,
+        endSession,
+        maxCount,
+        maxSelectedContactsNotSent,
+        nextContactNotSent,
+        selectedContactsNotSent,
+        selectedNations,
+        setEmailsSent,
+        setEndSession,
+    } = useContactList();
+
     const emailOptions = useEmailOptions();
+
     const singleContactState = useSingleContact({
         Component: emailOptions.EmailComponent,
     });
-    const toSendCount = SINGLE_CONTACT_MODE
-        ? [singleContactState.contact]
-        : useCL.selectedContactsNotSent.slice(0, useCL.maxCount - useCL.emailsSent);
+
+    const logMessage = (message: string, options?: LogMessageOptions) => {
+        logSendingMessage(message, { setFn: setSendingLog, ...options });
+    };
 
     useEffect(() => {
         console.log(`Updating sendingLog after reset on render #${forcedRender}`);
@@ -65,34 +75,34 @@ const EmailSender = () => {
     }, [forcedRender]);
 
     const leftToSendCount = useRef(0);
-    const remainingCountSession = Math.max(0, useCL.maxCount - useCL.emailsSent);
-    leftToSendCount.current = useCL.selectedContactsNotSent.slice(0, remainingCountSession).length;
+    const remainingCountSession = Math.max(0, maxCount - emailsSent);
+    leftToSendCount.current = selectedContactsNotSent.slice(0, remainingCountSession).length;
 
     const checkInProgress = useRef(false);
     const selectedNationsAtSendTime = useRef<string[]>([]);
+    const selectedNationsChangedSinceLastSending = selectedNationsAtSendTime.current !== selectedNations;
     useEffect(() => {
         async function checkIfSessionFinished() {
-            const selectedNationsChangedSinceLastSending = selectedNationsAtSendTime.current !== useCL.selectedNations;
             if (
-                useCL.emailsSent > 0 &&
+                emailsSent > 0 &&
                 !checkInProgress.current &&
-                (useCL.endSession || (leftToSendCount.current === 0 && !selectedNationsChangedSinceLastSending))
+                (endSession || (leftToSendCount.current === 0 && !selectedNationsChangedSinceLastSending))
             ) {
                 checkInProgress.current = true;
                 await waitRandomSeconds(fullProgressBarDelay, 0); // Let progressbar stay at 100% for a few seconds
-                const message = getSessionFinishedText(useCL.emailsSent);
+                const message = getSessionFinishedText(emailsSent);
                 setMessage(message);
                 logMessage(message, { addNewline: true });
                 clearSessionState();
                 checkInProgress.current = false;
-                useCL.setEmailsSent(0);
-                useCL.setEndSession(false);
+                setEmailsSent(0);
+                setEndSession(false);
                 const messageReady = `${message} Ready to start new session!`;
                 setMessage(messageReady);
             }
         }
         void checkIfSessionFinished();
-    }, [useCL]);
+    }, [emailsSent, endSession, setEmailsSent, setEndSession, selectedNationsChangedSinceLastSending]);
 
     useEffect(() => {
         const handleEmailStatus = (e: MessageEvent<MessagePayload>) => {
@@ -125,7 +135,11 @@ const EmailSender = () => {
         setIsSending(true);
         setMessage("Sending emails...");
 
-        selectedNationsAtSendTime.current = useCL.selectedNations;
+        const toSendCount = SINGLE_CONTACT_MODE
+            ? [singleContactState.contact]
+            : selectedContactsNotSent.slice(0, maxCount - emailsSent);
+
+        selectedNationsAtSendTime.current = selectedNations;
 
         for await (const contact of toSendCount) {
             const logContact = `${contact.n} - ${contact.e}`;
@@ -148,7 +162,7 @@ const EmailSender = () => {
                 const randomWindow = leftToSendCount.current > 1 ? defaultRandomWindow : 0;
 
                 // Important to update session state before the the wait
-                useCL.setEmailsSent((count) => {
+                setEmailsSent((count) => {
                     const newCount = ++count;
                     updateSessionState(newCount, delay);
                     return newCount;
@@ -176,7 +190,7 @@ const EmailSender = () => {
     };
 
     const onClickEndSession = () => {
-        useCL.setEndSession(true);
+        setEndSession(true);
         setMessage("Session ended by user...");
     };
 
@@ -187,16 +201,16 @@ const EmailSender = () => {
 
     const sendButtonDisabled =
         isSending ||
-        useCL.endSession === true ||
+        endSession === true ||
         controller.current.signal.aborted ||
         checkInProgress.current ||
         (SINGLE_CONTACT_MODE
             ? !validateEmail(singleContactState.email) || !singleContactState.name
-            : !useCL.selectedContactsNotSent.length);
+            : !selectedContactsNotSent.length);
 
     const cancelButtonDisabled =
         leftToSendCount.current === 0 ||
-        useCL.emailsSent === 0 ||
+        emailsSent === 0 ||
         controller.current.signal.aborted ||
         checkInProgress.current;
 
@@ -223,14 +237,13 @@ const EmailSender = () => {
                         {SINGLE_CONTACT_MODE ? (
                             <SingleContact state={singleContactState} />
                         ) : (
-                            <SelectNations useCL={useCL} isSending={isSending} />
+                            <SelectNations selectedContactsNotSent={selectedContactsNotSent} isSending={isSending} />
                         )}
                     </div>
                     <br />
 
                     <div className="column_options_right">
                         <EmailOptions
-                            useCL={useCL}
                             emailOptions={emailOptions}
                             isSending={isSending}
                             singleContactMode={SINGLE_CONTACT_MODE}
@@ -244,16 +257,15 @@ const EmailSender = () => {
                 <div className="container_buttons">
                     {!isSending && (
                         <div style={{ display: "flex", justifyContent: "space-between" }}>
-                            {useCL.emailsSent > 0 && !useCL.endSession && !checkInProgress.current && (
+                            {emailsSent > 0 && !endSession && !checkInProgress.current && (
                                 <ButtonEndSession onClick={onClickEndSession} />
                             )}
                             <ButtonSendEmails
                                 checkInProgress={checkInProgress.current}
                                 disabled={sendButtonDisabled}
-                                endSession={useCL.endSession}
+                                endSession={endSession}
                                 leftToSendCount={leftToSendCount.current}
                                 onClick={onClickSendEmail}
-                                useCL={useCL}
                             />
                         </div>
                     )}
@@ -269,12 +281,17 @@ const EmailSender = () => {
                     )}
                 </div>
 
-                {!SINGLE_CONTACT_MODE && <SendingProgress useCL={useCL} />}
+                {!SINGLE_CONTACT_MODE && (
+                    <SendingProgress
+                        maxSelectedContactsNotSent={maxSelectedContactsNotSent}
+                        selectedContactsNotSent={selectedContactsNotSent}
+                    />
+                )}
 
                 <div className="container_email_preview">
                     <EmailPreview
                         Component={emailOptions.EmailComponent}
-                        name={SINGLE_CONTACT_MODE ? singleContactState.name : useCL.nextContactNotSent.n}
+                        name={SINGLE_CONTACT_MODE ? singleContactState.name : nextContactNotSent.n}
                     />
                 </div>
             </div>

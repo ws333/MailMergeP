@@ -1,14 +1,44 @@
 import { VStack } from "@lib/ui/css/stack";
 import { ExpandablePanel } from "@lib/ui/panel/ExpandablePanel";
 import { Tooltip } from "radzionkit/ui/tooltips/Tooltip";
-import { UseContactListReturnType } from "../hooks/useContactList";
+import { oneDay, oneHour, oneMonth, sevenDays, threeMonths } from "../constants/timeConstants";
+import { useStoreState } from "../hooks/storeHooks";
 import "./SentCounts.css";
 
-type Props = {
-    useCL: UseContactListReturnType;
-};
+export function SentCounts() {
+    const now = Date.now();
+    const oneHourAgo = now - oneHour;
+    const oneDayAgo = now - oneDay;
+    const sevenDaysAgo = now - sevenDays;
+    const oneMonthAgo = now - oneMonth;
+    const threeMonthsAgo = now - threeMonths;
 
-export function SentCounts({ useCL }: Props) {
+    const contacts = useStoreState((state) => state.contactList.contacts);
+    const deletedContacts = useStoreState((state) => state.contactList.deletedContacts);
+
+    const combinedContacts = contacts.concat(deletedContacts);
+    const totalSentCount = combinedContacts.reduce((acc, contact) => acc + contact.sc, 0);
+    const totalSentCountLastHour = combinedContacts.reduce(
+        (acc, contact) => (contact.sd > oneHourAgo ? acc + 1 : acc),
+        0
+    );
+    const totalSentCount24Hours = combinedContacts.reduce(
+        (acc, contact) => (contact.sd > oneDayAgo ? acc + 1 : acc),
+        0
+    );
+    const totalSentCountLast7Days = combinedContacts.reduce(
+        (acc, contact) => (contact.sd > sevenDaysAgo ? acc + 1 : acc),
+        0
+    );
+    const totalSentCountLast30Days = combinedContacts.reduce(
+        (acc, contact) => (contact.sd > oneMonthAgo ? acc + 1 : acc),
+        0
+    );
+    const totalSentCountLast3Months = combinedContacts.reduce(
+        (acc, contact) => (contact.sd > threeMonthsAgo ? acc + 1 : acc),
+        0
+    );
+
     return (
         <ExpandablePanel
             className="sent-counts-panel"
@@ -22,7 +52,7 @@ export function SentCounts({ useCL }: Props) {
                                     <div>Emails sent last 24 hours</div>
                                 </div>
                                 <div className="column_right_header_sent_counts">
-                                    <div>{useCL.totalSentCount24Hours}</div>
+                                    <div>{totalSentCount24Hours}</div>
                                 </div>
                             </div>
                         </VStack>
@@ -40,11 +70,11 @@ export function SentCounts({ useCL }: Props) {
                         <div>Last 3 months</div>
                     </div>
                     <div className="column_right_sent_counts">
-                        <div>{useCL.totalSentCount}</div>
-                        <div>{useCL.totalSentCountLastHour}</div>
-                        <div>{useCL.totalSentCountLast7Days}</div>
-                        <div>{useCL.totalSentCountLast30Days}</div>
-                        <div>{useCL.totalSentCountLast3Months}</div>
+                        <div>{totalSentCount}</div>
+                        <div>{totalSentCountLastHour}</div>
+                        <div>{totalSentCountLast7Days}</div>
+                        <div>{totalSentCountLast30Days}</div>
+                        <div>{totalSentCountLast3Months}</div>
                     </div>
                 </div>
             )}

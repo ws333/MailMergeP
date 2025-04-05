@@ -1,25 +1,30 @@
-import { UseContactListReturnType } from "../hooks/useContactList";
+import { ContactI3C } from "../types/typesI3C";
+import { useStoreState } from "../hooks/storeHooks";
 
-type SendingProgressProps = {
-    useCL: UseContactListReturnType;
+type Props = {
+    maxSelectedContactsNotSent: number;
+    selectedContactsNotSent: ContactI3C[];
 };
 
-function SendingProgress({ useCL }: SendingProgressProps) {
+function SendingProgress({ maxSelectedContactsNotSent, selectedContactsNotSent }: Props) {
+    const emailsSent = useStoreState((state) => state.contactList.emailsSent);
+    const maxCount = useStoreState((state) => state.contactList.maxCount);
+
     const max =
-        useCL.maxSelectedContactsNotSent === 0
-            ? useCL.emailsSent
-            : useCL.emailsSent === 0
-              ? useCL.maxSelectedContactsNotSent
-              : useCL.maxSelectedContactsNotSent < useCL.maxCount
-                ? useCL.selectedContactsNotSent.length + useCL.emailsSent
-                : useCL.maxCount;
+        maxSelectedContactsNotSent === 0
+            ? emailsSent
+            : emailsSent === 0
+              ? maxSelectedContactsNotSent
+              : maxSelectedContactsNotSent < maxCount
+                ? selectedContactsNotSent.length + emailsSent
+                : maxCount;
 
     return (
         <section className="section_sending_progress">
             <h2>Progress</h2>
-            <progress className="progress_bar" value={useCL.emailsSent} max={max}></progress>
+            <progress className="progress_bar" value={emailsSent} max={max}></progress>
             <p>
-                {useCL.emailsSent} / {max}
+                {emailsSent} / {max}
             </p>
         </section>
     );

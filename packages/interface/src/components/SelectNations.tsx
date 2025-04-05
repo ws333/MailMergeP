@@ -1,19 +1,27 @@
-import { UseContactListReturnType } from "../hooks/useContactList";
+import { ContactI3C } from "../types/typesI3C";
+import { useStoreActions, useStoreState } from "../hooks/storeHooks";
 import { SentCounts } from "./SentCounts";
 import "./SelectNations.css";
 
 type Props = {
-    useCL: UseContactListReturnType;
+    selectedContactsNotSent: ContactI3C[];
     isSending: boolean;
 };
 
-function SelectNations({ useCL, isSending }: Props) {
+function SelectNations({ selectedContactsNotSent, isSending }: Props) {
+    const nationOptions = useStoreState((state) => state.contactList.nationOptions);
+    const selectedContacts = useStoreState((state) => state.contactList.selectedContacts);
+    const selectedNations = useStoreState((state) => state.contactList.selectedNations);
+    const setSelectedNations = useStoreActions((actions) => actions.contactList.setSelectedNations);
+    const toggleIsSelectedAllNations = useStoreActions((actions) => actions.contactList.toggleIsSelectedAllNations);
+    const isSelectedAllNations = useStoreState((state) => state.contactList.isSelectedAllNations);
+
     const onChangeSelectAll = () => {
-        useCL.toggleIsSelectedAllNations();
+        toggleIsSelectedAllNations();
     };
 
     const onChangeNation = (checked: boolean, nation: string) => {
-        useCL.setSelectedNations({ checked, nation });
+        setSelectedNations({ checked, nation });
     };
 
     return (
@@ -28,20 +36,20 @@ function SelectNations({ useCL, isSending }: Props) {
                             <input
                                 type="checkbox"
                                 disabled={isSending}
-                                checked={useCL.isSelectedAllNations}
+                                checked={isSelectedAllNations}
                                 onChange={onChangeSelectAll}
                             />
                             Select All
                         </label>
                     </div>
                     <div className={`nation-list ${isSending ? "disabled" : ""}`}>
-                        {useCL.nationOptions.map((nation) => (
+                        {nationOptions.map((nation) => (
                             <label key={nation} className="nation-item">
                                 <input
                                     type="checkbox"
                                     disabled={isSending}
                                     onChange={(e) => onChangeNation(e.target.checked, nation)}
-                                    checked={useCL.selectedNations.includes(nation)}
+                                    checked={selectedNations.includes(nation)}
                                 />
                                 {nation}
                             </label>
@@ -53,11 +61,11 @@ function SelectNations({ useCL, isSending }: Props) {
                             <div>Not sent to last 3 months</div>
                         </div>
                         <div>
-                            <div>{useCL.selectedContacts.length}</div>
-                            <div>{useCL.selectedContactsNotSent.length}</div>
+                            <div>{selectedContacts.length}</div>
+                            <div>{selectedContactsNotSent.length}</div>
                         </div>
                     </div>
-                    <SentCounts useCL={useCL} />
+                    <SentCounts />
                 </>
             </div>
         </div>

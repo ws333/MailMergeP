@@ -1,6 +1,6 @@
 import { Button } from "radzionkit";
 import { MouseEventHandler } from "react";
-import { UseContactListReturnType } from "../hooks/useContactList";
+import { useStoreState } from "../hooks/storeHooks";
 
 type Props = {
     checkInProgress: boolean;
@@ -8,18 +8,20 @@ type Props = {
     endSession: boolean;
     leftToSendCount: number;
     onClick: MouseEventHandler;
-    useCL: UseContactListReturnType;
 };
 
-function ButtonSendEmails({ checkInProgress, disabled, endSession, leftToSendCount, onClick, useCL }: Props) {
+function ButtonSendEmails({ checkInProgress, disabled, endSession, leftToSendCount, onClick }: Props) {
+    const emailsSent = useStoreState((state) => state.contactList.emailsSent);
+    const selectedNations = useStoreState((state) => state.contactList.selectedNations);
+
     const buttonText =
         checkInProgress || endSession
             ? "Please wait..."
-            : !useCL.selectedNations.length
+            : !selectedNations.length
               ? "No contacts selected"
               : !leftToSendCount
                 ? "Selected contacts already processed"
-                : !useCL.emailsSent
+                : !emailsSent
                   ? "Send Emails"
                   : "Continue";
     return (
