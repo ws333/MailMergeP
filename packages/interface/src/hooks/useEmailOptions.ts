@@ -1,57 +1,29 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { TEmailComponent } from "../types/types";
+import { useEffect } from "react";
 import { defaultMaxCount, defaultSendingDelay } from "../constants/constants";
-import { KeyOfEmailComponents, defaultLanguage, emailComponents, subjects } from "../constants/emailTemplates";
-import LetterEnglish from "../components/letters/LetterEnglish";
-import { OPTIONS_KEY, getOptions, storeOptionsKey } from "../helpers/indexedDB";
+import { KeyOfEmailComponents, defaultLanguage, subjects } from "../constants/emailTemplates";
+import { OPTIONS_KEY, getOptions } from "../helpers/indexedDB";
 import { useStoreActions, useStoreState } from "./storeHooks";
 
 function useEmailOptions() {
-    const [delay, _setDelay] = useState<number>(defaultSendingDelay);
-    const [language, _setLanguage] = useState<KeyOfEmailComponents>(defaultLanguage);
-    const [subjectOption, _setSubjectOption] = useState<string>(subjects[language][0]);
-    const [customSubject, _setCustomSubject] = useState<string>("");
+    const delay = useStoreState((state) => state.emailOptions.delay);
+    const setDelay = useStoreActions((actions) => actions.emailOptions.setDelay);
+
+    const language = useStoreState((state) => state.emailOptions.language);
+    const setLanguage = useStoreActions((actions) => actions.emailOptions.setLanguage);
+
+    const subjectOption = useStoreState((state) => state.emailOptions.subjectPerLanguage);
+
+    const customSubject = useStoreState((state) => state.emailOptions.customSubject);
+    const setCustomSubject = useStoreActions((actions) => actions.emailOptions.setCustomSubject);
+
+    const EmailComponent = useStoreState((state) => state.emailOptions.EmailComponent);
+
     const selectedSubject =
-        subjectOption === "Custom Subject" || subjectOption === "Tilpasset Emne" ? customSubject : subjectOption;
+        subjectOption[language] === "Custom Subject" || subjectOption[language] === "Tilpasset Emne"
+            ? customSubject
+            : subjectOption[language];
 
     const setMaxCount = useStoreActions((actions) => actions.contactList.setMaxCount);
-    const setNationOptions = useStoreActions((actions) => actions.contactList.setNationOptions);
-    const nationOptionsFetched = useStoreState((state) => state.contactList.nationOptionsFetched);
-
-    const EmailComponentRef = useRef<TEmailComponent>(LetterEnglish);
-
-    const setDelay = (value: number) => {
-        storeOptionsKey(value, "delay");
-        _setDelay(value);
-    };
-
-    const setLanguage = useCallback(
-        (value: KeyOfEmailComponents, subject?: string) => {
-            storeOptionsKey(value, "language");
-            _setLanguage(value);
-            if (value === "Norwegian") {
-                setNationOptions(["NO"]);
-            } else {
-                setNationOptions(nationOptionsFetched);
-            }
-            const _subject = subject ?? subjects[value][0];
-            storeOptionsKey(_subject, "subject");
-            _setSubjectOption(_subject);
-
-            EmailComponentRef.current = emailComponents[value];
-        },
-        [nationOptionsFetched, setNationOptions]
-    );
-
-    const setSubjectOption = (value: string) => {
-        storeOptionsKey(value, "subject");
-        _setSubjectOption(value);
-    };
-
-    const setCustomSubject = (value: string) => {
-        storeOptionsKey(value, "customSubject");
-        _setCustomSubject(value);
-    };
 
     useEffect(() => {
         const hydrateOptions = async () => {
@@ -59,7 +31,7 @@ function useEmailOptions() {
             if (options) {
                 const delay = (options.find((item) => item.key === OPTIONS_KEY.DELAY)?.value ??
                     defaultSendingDelay) as number;
-                _setDelay(delay);
+                setDelay(delay);
 
                 const _maxCount = (options.find((item) => item.key === OPTIONS_KEY.MAX_COUNT)?.value ??
                     defaultMaxCount) as number;
@@ -67,29 +39,25 @@ function useEmailOptions() {
 
                 const customSubject = (options.find((item) => item.key === OPTIONS_KEY.CUSTOM_SUBJECT)?.value ??
                     "") as string;
-                _setCustomSubject(customSubject);
+                setCustomSubject(customSubject);
 
                 const language = (options.find((item) => item.key === OPTIONS_KEY.LANGUAGE)?.value ??
                     defaultLanguage) as KeyOfEmailComponents;
-                const subject = (options.find((item) => item.key === OPTIONS_KEY.SUBJECT)?.value ??
-                    subjects[language][0]) as string;
-                setLanguage(language, subject);
+                const storedSubjectPerLanguage = options.find((item) => item.key === OPTIONS_KEY.SUBJECT)
+                    ?.value as string;
+                const subjectPerLanguage = storedSubjectPerLanguage
+                    ? JSON.parse(storedSubjectPerLanguage)
+                    : { [language]: subjects[language][0] };
+                setLanguage({ language, subjectPerLanguage: subjectPerLanguage });
             }
         };
         void hydrateOptions();
-    }, [setLanguage, setMaxCount]);
+    }, [setCustomSubject, setDelay, setLanguage, setMaxCount]);
 
     return {
         delay,
-        setDelay,
-        language,
-        setLanguage,
-        subjectOption,
-        setSubjectOption,
-        customSubject,
-        setCustomSubject,
         selectedSubject,
-        EmailComponent: EmailComponentRef.current,
+        EmailComponent,
     };
 }
 export { useEmailOptions };

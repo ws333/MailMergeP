@@ -53,10 +53,10 @@ const EmailSender = () => {
         setEndSession,
     } = useContactList();
 
-    const emailOptions = useEmailOptions();
+    const { delay, EmailComponent, selectedSubject } = useEmailOptions();
 
     const singleContactState = useSingleContact({
-        Component: emailOptions.EmailComponent,
+        Component: EmailComponent,
     });
 
     const logMessage = (message: string, options?: LogMessageOptions) => {
@@ -127,7 +127,7 @@ const EmailSender = () => {
     async function onClickSendEmail(e: React.MouseEvent<HTMLButtonElement>) {
         e.preventDefault();
 
-        if (!emailOptions.selectedSubject) {
+        if (!selectedSubject) {
             setMessage("Please select or enter a subject");
             return false;
         }
@@ -158,17 +158,17 @@ const EmailSender = () => {
                 await storeActiveContacts(contact); // Update the contact in indexedDB
                 logMessage(`Email sent to ${logContact}`);
 
-                const delay = leftToSendCount.current > 1 ? emailOptions.delay : fullProgressBarDelay;
+                const _delay = leftToSendCount.current > 1 ? delay : fullProgressBarDelay;
                 const randomWindow = leftToSendCount.current > 1 ? defaultRandomWindow : 0;
 
                 // Important to update session state before the the wait
                 setEmailsSent((count) => {
                     const newCount = ++count;
-                    updateSessionState(newCount, delay);
+                    updateSessionState(newCount, _delay);
                     return newCount;
                 });
 
-                await waitRandomSeconds(delay, randomWindow, { signal: controller.current.signal });
+                await waitRandomSeconds(_delay, randomWindow, { signal: controller.current.signal });
             } catch (error) {
                 console.warn("*Debug* -> EmailSender.tsx -> handleSendEmails -> error:", error);
                 logMessage(`Failed to send email to ${logContact}`);
@@ -179,10 +179,10 @@ const EmailSender = () => {
     }
 
     const prepareAndSendEmail = async (contact: ContactI3C) => {
-        const emailText = renderEmail(emailOptions.EmailComponent, { name: contact.n });
+        const emailText = renderEmail(EmailComponent, { name: contact.n });
         const email: Email = {
             to: contact.e,
-            subject: emailOptions.selectedSubject,
+            subject: selectedSubject,
             body: emailText,
         };
 
@@ -243,11 +243,7 @@ const EmailSender = () => {
                     <br />
 
                     <div className="column_options_right">
-                        <EmailOptions
-                            emailOptions={emailOptions}
-                            isSending={isSending}
-                            singleContactMode={SINGLE_CONTACT_MODE}
-                        />
+                        <EmailOptions isSending={isSending} singleContactMode={SINGLE_CONTACT_MODE} />
                     </div>
                     <br />
                 </div>
@@ -290,7 +286,7 @@ const EmailSender = () => {
 
                 <div className="container_email_preview">
                     <EmailPreview
-                        Component={emailOptions.EmailComponent}
+                        Component={EmailComponent}
                         name={SINGLE_CONTACT_MODE ? singleContactState.name : nextContactNotSent.n}
                     />
                 </div>

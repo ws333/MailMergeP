@@ -1,5 +1,6 @@
 import { ContactI3C, SendingLogEntry } from "../types/typesI3C";
 import { zeroWidtSpace } from "../constants/constants";
+import { SubjectPerLanguage } from "../constants/emailTemplates";
 
 const DB_NAME = "ContactsI3CDatabase";
 const DB_VERSION = 2;
@@ -193,13 +194,14 @@ export async function storeMetadataKey(timestamp: number, key: MetadataKey): Pro
     }
 }
 
-export async function storeOptionsKey(value: number | string, key: OptionsKey): Promise<void> {
+export async function storeOptionsKey(value: number | string | SubjectPerLanguage, key: OptionsKey): Promise<void> {
     const db = await openDatabase();
     try {
         const transaction = db.transaction(STORE.OPTIONS, "readwrite");
         const store = transaction.objectStore(STORE.OPTIONS);
+        const _value = key === "subject" ? JSON.stringify(value) : value;
         await new Promise<void>((resolve, reject) => {
-            const request = store.put(value, key);
+            const request = store.put(_value, key);
             request.onsuccess = () => resolve();
             request.onerror = () => reject(new Error(`Failed to store key: ${key}`));
         });

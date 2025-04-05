@@ -2,9 +2,10 @@
  * A model for a Redux store (using easy-peasy) for all mailmerge code.
  * All persistent state is stored via this model.
  */
-import { action, actionOn, computed, thunk } from "easy-peasy";
+import { action, actionOn, computed, thunk, thunkOn } from "easy-peasy";
 import type { Model } from "./types/modelTypes";
-import { defaultMaxCount } from "./constants/constants";
+import { defaultMaxCount, defaultSendingDelay } from "./constants/constants";
+import { defaultLanguage, emailComponents, subjects } from "./constants/emailTemplates";
 import TextEndingSession from "./components/dialogTexts/TextEndingSession";
 import { storeOptionsKey } from "./helpers/indexedDB";
 import { messageParent } from "./service";
@@ -256,5 +257,78 @@ export const model: Model = {
             const state = getState();
             actions.setIsSelectedAllNations(!state.isSelectedAllNations);
         }),
+    },
+    emailOptions: {
+        delay: defaultSendingDelay,
+        setDelay: action((state, payload) => ({ ...state, delay: payload })),
+        storeDelay: thunkOn(
+            (actions) => actions.setDelay,
+            async (_actions, target) => {
+                storeOptionsKey(target.payload, "delay");
+            }
+        ),
+
+        language: defaultLanguage,
+        setLanguage: action((state, payload) => ({
+            ...state,
+            language: payload.language,
+            subjectPerLanguage: payload.subjectPerLanguage
+                ? {
+                      ...state.subjectPerLanguage,
+                      ...payload.subjectPerLanguage,
+                  }
+                : {
+                      ...state.subjectPerLanguage,
+                      [payload.language]: state.subjectPerLanguage[payload.language],
+                  },
+        })),
+        storeLanguage: thunkOn(
+            (actions) => actions.setLanguage,
+            async (_actions, target, { getStoreActions, getStoreState }) => {
+                const { payload } = target;
+                const storeActions = getStoreActions();
+                const storeState = getStoreState();
+
+                storeOptionsKey(target.payload.language, "language");
+
+                if (payload.language === "Norwegian") {
+                    storeActions.contactList.setNationOptions(["NO"]);
+                } else {
+                    storeActions.contactList.setNationOptions(storeState.contactList.nationOptionsFetched);
+                }
+
+                storeActions.emailOptions.setSubjectPerLanguage(
+                    payload.subjectPerLanguage ? payload.subjectPerLanguage : storeState.emailOptions.subjectPerLanguage
+                );
+            }
+        ),
+
+        subject: computed((state) => state.subjectPerLanguage[state.language]!),
+        subjectPerLanguage: { [defaultLanguage]: subjects[defaultLanguage][0] },
+        setSubjectPerLanguage: action((state, payload) => ({
+            ...state,
+            subjectPerLanguage: { ...state.subjectPerLanguage, ...payload },
+        })),
+        storeSubjectPerLanguage: thunkOn(
+            (actions) => actions.setSubjectPerLanguage,
+            async (_actions, target, { getState }) => {
+                const storeState = getState();
+                storeOptionsKey({ ...storeState.subjectPerLanguage, ...target.payload }, "subject");
+            }
+        ),
+
+        customSubject: "",
+        setCustomSubject: action((state, payload) => ({ ...state, customSubject: payload })),
+        storeCustomSubject: thunkOn(
+            (actions) => actions.setCustomSubject,
+            async (_actions, target) => {
+                storeOptionsKey(target.payload, "customSubject");
+            }
+        ),
+        customSubjectVisible: computed(
+            (state) => state.subject === "Custom Subject" || state.subject === "Tilpasset Emne"
+        ),
+
+        EmailComponent: computed((state) => emailComponents[state.language]),
     },
 };

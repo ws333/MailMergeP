@@ -28,3 +28,4 @@ export const defaultLanguage: KeyOfEmailComponents = "English";
 
 export type KeyOfEmailComponents = keyof typeof emailComponents;
 export type Subjects = Record<KeyOfEmailComponents, string[]>;
+export type SubjectPerLanguage = { [K in KeyOfEmailComponents]?: string };

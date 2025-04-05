@@ -3,35 +3,43 @@ import { FocusEvent, useEffect, useRef, useState } from "react";
 import { maxCountOptions, minSendingDelay } from "../constants/constants";
 import { KeyOfEmailComponents, emailComponents, subjects } from "../constants/emailTemplates";
 import { useStoreActions, useStoreState } from "../hooks/storeHooks";
-import { useEmailOptions } from "../hooks/useEmailOptions";
 import { storeOptionsKey } from "../helpers/indexedDB";
 import { objectKeys } from "../helpers/objectHelpers";
 import "./EmailOptions.css";
 
 export type EmailOptionsProps = {
-    emailOptions: ReturnType<typeof useEmailOptions>;
     isSending: boolean;
     singleContactMode: boolean;
 };
 
-function EmailOptions({ emailOptions, isSending, singleContactMode }: EmailOptionsProps) {
+function EmailOptions({ isSending, singleContactMode }: EmailOptionsProps) {
+    const delay = useStoreState((state) => state.emailOptions.delay);
+    const setDelay = useStoreActions((actions) => actions.emailOptions.setDelay);
+
+    const language = useStoreState((state) => state.emailOptions.language);
+    const setLanguage = useStoreActions((actions) => actions.emailOptions.setLanguage);
+
+    const subject = useStoreState((state) => state.emailOptions.subject);
+    const setSubjectOption = useStoreActions((actions) => actions.emailOptions.setSubjectPerLanguage);
+
+    const customSubject = useStoreState((state) => state.emailOptions.customSubject);
+    const setCustomSubject = useStoreActions((actions) => actions.emailOptions.setCustomSubject);
+
     const maxCount = useStoreState((state) => state.contactList.maxCount);
     const setMaxCount = useStoreActions((actions) => actions.contactList.setMaxCount);
 
     const customSubjectRef = useRef<HTMLInputElement>(null);
     if (customSubjectRef.current) {
-        customSubjectRef.current.value = emailOptions.customSubject;
+        customSubjectRef.current.value = customSubject;
     }
+    const customSubjectVisible = useStoreState((state) => state.emailOptions.customSubjectVisible);
 
     const onBlurCustomSubject = (e: FocusEvent<HTMLInputElement>) => {
         if (customSubjectRef.current) {
             customSubjectRef.current.value = e.target.value;
         }
-        emailOptions.setCustomSubject(e.target.value);
+        setCustomSubject(e.target.value);
     };
-
-    const customSubjectVisible =
-        emailOptions.subjectOption === "Custom Subject" || emailOptions.subjectOption === "Tilpasset Emne"; // TODO:Use last items in the subjects array for these strings
 
     useEffect(() => {
         if (customSubjectVisible) {
@@ -42,11 +50,11 @@ function EmailOptions({ emailOptions, isSending, singleContactMode }: EmailOptio
 
     // Update local delay after hydration
     useEffect(() => {
-        setLocalDelay(emailOptions.delay.toString());
-    }, [emailOptions.delay]);
+        setLocalDelay(delay.toString());
+    }, [delay]);
 
     // Using local state to allow empty input
-    const [localDelay, setLocalDelay] = useState(emailOptions.delay.toString());
+    const [localDelay, setLocalDelay] = useState(delay.toString());
 
     function processDelayInput(value: string) {
         const delay = Number(value);
@@ -79,7 +87,7 @@ function EmailOptions({ emailOptions, isSending, singleContactMode }: EmailOptio
                                             onBlur={(e) => {
                                                 const delay = processDelayInput(e.target.value);
                                                 setLocalDelay(delay.toString());
-                                                emailOptions.setDelay(delay);
+                                                setDelay(delay);
                                             }}
                                         />
                                     </div>
@@ -120,9 +128,9 @@ function EmailOptions({ emailOptions, isSending, singleContactMode }: EmailOptio
                 Email language
                 <br />
                 <select
-                    value={emailOptions.language}
+                    value={language}
                     disabled={isSending}
-                    onChange={(e) => emailOptions.setLanguage(e.target.value as KeyOfEmailComponents)}
+                    onChange={(e) => setLanguage({ language: e.target.value as KeyOfEmailComponents })}
                 >
                     {objectKeys(emailComponents).map((_language) => (
                         <option key={_language} value={_language}>
@@ -137,11 +145,11 @@ function EmailOptions({ emailOptions, isSending, singleContactMode }: EmailOptio
                     Subject
                     <br />
                     <select
-                        value={emailOptions.subjectOption}
+                        value={subject}
                         disabled={isSending}
-                        onChange={(e) => emailOptions.setSubjectOption(e.target.value)}
+                        onChange={(e) => setSubjectOption({ [language]: e.target.value })}
                     >
-                        {subjects[emailOptions.language].map((_subject) => (
+                        {subjects[language].map((_subject) => (
                             <option key={_subject} value={_subject}>
                                 {_subject}
                             </option>
